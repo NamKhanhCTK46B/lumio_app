@@ -28,7 +28,7 @@ jobs:
         run: supabase start
 
       - name: Reset DB (apply migrations + seed.sql)
-        run: supabase db reset --no-seed=false
+        run: supabase db reset
 
       - name: Smoke test schema
         env:
