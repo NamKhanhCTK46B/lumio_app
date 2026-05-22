@@ -1,0 +1,31 @@
+node_modules
+.next
+.git
+.github
+.vscode
+.idea
+.DS_Store
+
+# Tài liệu nội bộ (đã gitignored — không cần copy vào image)
+docs
+.claude
+
+# Supabase CLI workspace local — không liên quan tới Next.js runtime
+supabase
+
+# Test SQL
+tests
+
+# Env files — runtime sẽ inject qua docker run / compose
+.env
+.env.local
+.env.development
+.env.production
+.env.development.local
+.env.production.local
+!.env.example
+
+# Build artifacts khác
+*.log
+*.tsbuildinfo
+next-env.d.ts

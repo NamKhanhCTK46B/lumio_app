@@ -1,0 +1,23 @@
+# Docker Compose production. Build từ Dockerfile multi-stage.
+# Yêu cầu .env.production có URL Supabase remote thật + service role key.
+#
+# Lệnh:
+#   docker compose -f docker-compose.prod.yml up --build -d
+
+services:
+  app:
+    container_name: lumio-app-prod
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.production
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 30s
