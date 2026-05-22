@@ -14,7 +14,7 @@
 - **Cần API key:** Không
 - **Trả về:** definition, phonetics (IPA + audio MP3), examples, synonyms, antonyms
 - **Mức dùng:** miễn phí, không giới hạn hợp lý, mã nguồn mở.
-- **Vai trò trong Lumio:** nguồn chính cho popup từ vựng (`vocab_words.definition_en`, `phonetic_ipa`, `examples`).
+- **Vai trò trong Lumio:** nguồn chính cho popup từ vựng (`tu_da_luu.nghia_en`, `phonetic_ipa`, `examples`).
 
 ```ts
 // lib/dictionary/free.ts
@@ -31,7 +31,7 @@ const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}
 - **URL:** https://www.datamuse.com/api
 - **Cần API key:** Không (100K req/ngày miễn phí)
 - **Trả về:** "Word-finding" API — tìm từ đồng nghĩa, từ vần, từ thường đi kèm (collocation), v.v.
-- **Vai trò trong Lumio:** điền `vocab_words.synonyms`, gợi ý collocation cho writing.
+- **Vai trò trong Lumio:** điền `tu_da_luu.tu_dong_nghia`, gợi ý collocation cho writing.
 
 ### 🟢 Forvo Pronunciation API
 - **URL:** https://api.forvo.com
@@ -75,7 +75,7 @@ const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}
 
 ---
 
-## 3. Bộ từ vựng theo chủ đề có sẵn (cho `decks.is_system = true`)
+## 3. Bộ từ vựng theo chủ đề có sẵn (cho `bo_tu.la_he_thong = true`)
 
 | Chủ đề | Nguồn gợi ý | URL |
 |---|---|---|
@@ -87,7 +87,7 @@ const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}
 | Phim & truyền hình | OpenSubtitles-based frequency lists | https://www.opensubtitles.org |
 | Tin tức | VOA Learning English wordlists | https://learningenglish.voanews.com |
 
-> **Khuyến nghị quy trình:** dùng EVP làm "ground truth" cho CEFR; seed 6–8 deck mẫu (`decks.is_system = true`) gồm 40–60 từ mỗi deck; gắn `topic` và `cefr_level` để filter.
+> **Khuyến nghị quy trình:** dùng EVP làm "ground truth" cho CEFR; seed 6–8 deck mẫu (`bo_tu.la_he_thong = true`) gồm 40–60 từ mỗi deck; gắn `topic` và `cefr_level` để filter.
 
 ---
 
@@ -115,7 +115,7 @@ const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}
 ### 🟢 Cambridge IELTS Past Papers (sách 1–19)
 - **URL:** https://www.cambridgeenglish.org/exams-and-tests/ielts/
 - **Mức dùng:** Sách giấy / PDF — đề thi thật từ các kỳ trước, có sample answer và band annotation. Không dùng API; có thể import thủ công.
-- **Vai trò:** Bộ đề "vàng" — dùng để seed `essay_prompts` table.
+- **Vai trò:** Bộ đề "vàng" — dùng để seed `de_bai_viet` table.
 
 ### 🟢 IELTS Writing Sample Answers — IDP Australia
 - **URL:** https://ielts.idp.com/prepare/article-ielts-writing-sample-answers
@@ -231,32 +231,32 @@ const res = await fetch(`https://api.dictionaryapi.dev/api/v2/entries/en/${word}
 
 ## 9. Cách Lumio sử dụng các nguồn trên — quy trình đề xuất
 
-### 9.1 Seed bộ từ hệ thống (system decks)
+### 9.1 Seed bộ từ hệ thống (system bo_tu)
 1. Tải CEFR-J wordlist + AWL + GSL.
 2. Chia thành 6–8 deck chủ đề (Travel, Business, Movies, IELTS Academic, …) — mỗi deck 40–60 từ.
 3. Với mỗi từ, gọi Free Dictionary API → điền `definition_en`, `phonetic_ipa`, `examples`.
 4. Gọi Datamuse → điền `synonyms`.
 5. Dịch sang tiếng Việt qua Gemini (`gemini-3.1-flash-lite`) → điền `definition_vi`.
 6. Embed bằng `gemini-embedding-2-preview` → điền `vector`.
-7. `insert into decks (is_system=true, ...)` rồi `insert into vocab_words (...)`.
+7. `insert into bo_tu (is_system=true, ...)` rồi `insert into tu_da_luu (...)`.
 
 ### 9.2 Seed đề bài viết
 1. Lấy ~30 đề IELTS Writing Task 2 từ IELTS Liz / British Council / Cambridge Past Papers.
 2. Lấy ~10 đề Task 1 (graph/letter).
 3. Lấy ~20 mẫu email (formal/informal) từ British Council.
-4. Lưu vào table `essay_prompts (id, task_type, level, topic, prompt, source_url)`.
+4. Lưu vào table `de_bai_viet (id, loai_de, cefr_phu_hop, chu_de, de_bai, url_nguon)`.
 
 ### 9.3 Workflow lấy nội dung user
 1. User dán URL → `ContentExtractor.extractorFor(url)` (Factory pattern).
 2. YouTube: dùng `youtube-transcript` npm.
 3. Article: dùng `@mozilla/readability`.
 4. Podcast: lấy metadata qua Podcast Index API; transcript qua Whisper nếu thiếu.
-5. Lưu vào `content_sources` + `content_segments`, embed + cache.
+5. Lưu vào `nguon_noi_dung` + `doan_noi_dung`, embed + cache.
 
 ### 9.4 Pipeline chấm bài
 1. Pre-process bằng LanguageTool API — bắt lỗi cơ bản trước.
 2. Gửi cùng essay + LT findings → Gemini với prompt rubric IELTS.
-3. Parse JSON response → ghi `essay_annotations` + `essays` scores.
+3. Parse JSON response → ghi `chu_thich_bai_viet` + `bai_viet` scores.
 
 ---
 

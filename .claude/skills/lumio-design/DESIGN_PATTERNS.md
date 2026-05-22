@@ -16,10 +16,10 @@
 export const vocabRepo = {
   async listByDeck(supabase: SupabaseClient, deckId: string) {
     const { data, error } = await supabase
-      .from('vocab_words')
-      .select('id, lemma, pos, definition_vi, status, vocab_reviews(next_review_at)')
-      .eq('deck_id', deckId)
-      .order('created_at', { ascending: false });
+      .from('tu_da_luu')
+      .select('id, tu_goc, loai_tu, nghia_vi, trang_thai, lich_on_tap(on_tap_ke_luc)')
+      .eq('bo_tu_id', deckId)
+      .order('tao_luc', { ascending: false });
     if (error) throw error;
     return data;
   },
@@ -88,14 +88,14 @@ export function extractorFor(url: string): ContentExtractor {
 ## 4. Observer (qua Supabase Realtime) — thông báo + presence
 
 **Ở đâu:** `components/app/notifications-tray.tsx`, `lib/supabase/client.ts`
-**Ràng buộc:** Khi `pg_cron` enqueue một hàng `notifications`, tab đang mở của user phải bật ngay. Không thể polling.
+**Ràng buộc:** Khi `pg_cron` enqueue một hàng `thong_bao`, tab đang mở của user phải bật ngay. Không thể polling.
 
 ```ts
 useEffect(() => {
   const channel = supabase
-    .channel(`notifications:user:${userId}`)
+    .channel(`thong_bao:nguoi_dung:${userId}`)
     .on('postgres_changes',
-      { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${userId}` },
+      { event: 'INSERT', schema: 'public', table: 'thong_bao', filter: `nguoi_dung_id=eq.${userId}` },
       payload => addToTray(payload.new),
     )
     .subscribe();
@@ -161,11 +161,11 @@ Cô lập SRS strategy → có thể chuyển sang **FSRS** sau này mà không 
 **Ràng buộc:** Form submit và gọi AJAX có thể mang bất cứ gì. Cần một lớp validation duy nhất throw thông báo có nghĩa trước khi đụng DB.
 
 ```ts
-// lib/schemas/vocab.ts
+// lib/schemas/vocab.ts — tên field map 1-1 với DB column để insert thẳng vào Supabase
 export const SaveVocabSchema = z.object({
-  lemma: z.string().trim().min(1).max(64),
-  deckId: z.string().uuid().optional(),
-  sourceId: z.string().uuid().optional(),
+  tu_goc: z.string().trim().min(1).max(64),
+  bo_tu_id: z.string().uuid().optional(),
+  nguon_id: z.string().uuid().optional(),
 });
 export type SaveVocabInput = z.infer<typeof SaveVocabSchema>;
 

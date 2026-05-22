@@ -124,7 +124,7 @@ lib/
 - Mọi bảng user-owned có cột `user_id uuid` FK → `auth.users(id)` và policy RLS `using (auth.uid() = user_id)`.
 - Mọi bảng có `created_at timestamptz default now()` + `updated_at timestamptz default now()` (giữ tươi bởi trigger `set_updated_at()`).
 - Index cho mọi FK + cột thường được filter (`user_id`, `next_review_at`, …).
-- **pgvector** lưu embedding 1536-d cho `vocab_words` và `content_sources` (dedup ngữ nghĩa, gợi ý nội dung tương tự).
+- **pgvector** lưu embedding 1536-d cho `tu_da_luu` và `nguon_noi_dung` (dedup ngữ nghĩa, gợi ý nội dung tương tự).
 - **pg_cron** chạy hằng đêm để enqueue thông báo ôn tập.
 
 ---
@@ -171,9 +171,9 @@ Lý do: prompt được version-control, test được, dễ A/B.
 
 ## 5. Realtime & thông báo
 
-- Bảng `notifications` + channel Supabase Realtime `notifications:user:<uid>`.
+- Bảng `thong_bao` + channel Supabase Realtime `thong_bao:nguoi_dung:<uid>`.
 - Client subscribe khi app shell mount; INSERT mới push xuống dưới dạng toast + bell tray.
-- **Nhắc ôn theo lịch** sinh ra bởi `pg_cron` hằng đêm → INSERT vào `notifications` → push qua Realtime.
+- **Nhắc ôn theo lịch** sinh ra bởi `pg_cron` hằng đêm → INSERT vào `thong_bao` → push qua Realtime.
 - **Browser Notifications API** opt-in cho push cấp OS khi tab đóng.
 
 ---
@@ -183,8 +183,8 @@ Lý do: prompt được version-control, test được, dễ A/B.
 | Dữ liệu | Cache | Invalidation |
 |---|---|---|
 | Trang tĩnh (landing, pricing) | Vercel Edge (`force-static`) | Trên mỗi deploy |
-| User profile, decks | `revalidateTag('user:<uid>:decks')` trong Server Action | Tag bị invalid sau mutation |
-| Transcript YouTube | Bảng `content_sources` — cache theo `url_hash` | Manual refresh |
+| User profile, bo_tu | `revalidateTag('user:<uid>:bo_tu')` trong Server Action | Tag bị invalid sau mutation |
+| Transcript YouTube | Bảng `nguon_noi_dung` — cache theo `ma_bam_url` | Manual refresh |
 | LLM cho prompt deterministic (dictionary lookup) | Bảng `vocab_lookups` | TTL 30 ngày |
 | LLM cho prompt user-specific (chấm bài) | Không cache |
 

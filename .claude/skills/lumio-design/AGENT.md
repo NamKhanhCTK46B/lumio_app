@@ -100,7 +100,7 @@ app/(app)/vocab/
 
 ### 3.1 Server vs Client component
 - **Mặc định: Server Component.** Chỉ thêm `'use client'` khi component thực sự cần state, effect, hoặc browser API.
-- Server Components fetch dữ liệu trực tiếp qua `createClient()` từ `lib/supabase/server.ts` — RLS lo phần quyền, **không thêm** `where user_id = ...` thủ công.
+- Server Components fetch dữ liệu trực tiếp qua `createClient()` từ `lib/supabase/server.ts` — RLS lo phần quyền, **không thêm** `where nguoi_dung_id = ...` thủ công.
 - Client Components không gọi Supabase trực tiếp cho writes — gọi Server Action.
 
 ### 3.2 Server Actions
@@ -122,7 +122,7 @@ export async function saveVocabAction(input: unknown) {
   if (!parsed.success) return { ok: false as const, error: parsed.error.message };
   const supabase = await createClient();
   const word = await vocabRepo.save(supabase, parsed.data);
-  revalidateTag(`vocab:user:${word.user_id}`);
+  revalidateTag(`vocab:nguoi_dung:${word.nguoi_dung_id}`);
   return { ok: true as const, data: word };
 }
 ```
@@ -163,7 +163,7 @@ Provider chọn Gemini hoặc OpenRouter dựa trên rate-limit. Đừng `import
 - Server action: `<verb><Noun>Action` (`saveVocabAction`).
 
 ### 3.8 Tiếng Việt trong UI
-- Mọi UI string trong tiếng Việt **mặc định**, có nhánh tiếng Anh nếu `profiles.ui_language = 'en'`.
+- Mọi UI string trong tiếng Việt **mặc định**, có nhánh tiếng Anh nếu `ho_so.ngon_ngu_giao_dien = 'en'`.
 - Dùng `next-intl` (https://next-intl.dev) cho i18n. Đặt namespace theo tính năng:
   ```
   messages/
@@ -172,6 +172,84 @@ Provider chọn Gemini hoặc OpenRouter dựa trên rate-limit. Đừng `import
   ```
 - Không hardcode chuỗi UI; mọi key đi qua `useTranslations()`.
 - Đại từ: `bạn` cho user, `Lumio` cho brand. Không dùng `quý khách`. Không emoji trong UI sản phẩm.
+
+### 3.9 Clean code
+
+Mọi PR đều phải qua checklist này. Reviewer reject nếu vi phạm.
+
+**Đặt tên**
+- ✅ `dueWordsForReview`, `gradeVocabReviewAction`, `extractTranscriptFromYouTube`
+- ❌ `dw`, `doIt`, `helper2`, `tmp`
+- Domain term giữ nguyên cách viết chuẩn: `CEFR`, `IELTS`, `SRS`, `SM-2`, `FSRS`.
+
+**Kích thước & hình dạng hàm**
+- Hàm ≤ **40 dòng**; nếu cần scroll → tách subfunction.
+- 1 hàm = 1 nhiệm vụ. Tên hàm phải mô tả đúng nhiệm vụ đó (nếu phải dùng "và" → tách).
+- Tham số ≤ **4**; nhiều hơn → gom vào object `{ … }`.
+
+**Control flow**
+- **Early return** cho guard clause:
+  ```ts
+  // ✅ Đúng
+  if (!user) return { ok: false, error: 'Chưa đăng nhập' };
+  if (input.lemma.length === 0) return { ok: false, error: 'Thiếu từ' };
+  return save(input);
+
+  // ❌ Sai — nested
+  if (user) {
+    if (input.lemma.length > 0) {
+      return save(input);
+    } else { return ... }
+  }
+  ```
+- Không `else` sau `return`.
+- Tránh ternary lồng > 1 cấp.
+
+**Magic number / string**
+- Mọi giá trị nghiệp vụ thành `const` có tên + comment lý do:
+  ```ts
+  // Tối đa 20 từ mỗi phiên ôn theo khuyến nghị SuperMemo
+  const MAX_REVIEW_BATCH = 20;
+  ```
+
+**Immutability**
+- `const` mặc định, chỉ `let` khi thực sự cần reassign.
+- Không mutate tham số. Dùng spread / `map` / `filter`.
+- Object trả về từ server action: **plain object**, không class instance.
+
+**Error handling**
+- Không `try { … } catch {}` rỗng.
+- `catch` phải: (a) log có context, (b) re-throw hoặc trả `{ ok: false, error: '…' }` có nghĩa cho user.
+- Đừng dùng `as any` để né lỗi type. Sửa root cause hoặc dùng Zod narrow.
+
+**DRY / YAGNI**
+- 2 lần lặp: chấp nhận. 3 lần: trừu tượng hoá.
+- Không viết abstraction cho "tương lai" — chỉ khi thực sự cần.
+- Không feature flag, fallback, validation cho case không thể xảy ra (xem `noUncheckedIndexedAccess` + Zod đã bảo vệ).
+
+**Chú thích (comment)**
+- **Bằng tiếng Việt.** Giải thích **tại sao**, không phải **cái gì**.
+  ```ts
+  // ✅ Đúng — giải thích lý do
+  // Dùng SM-2 vì dataset hiện chưa đủ để fit FSRS (cần ≥ 1000 review).
+  return sm2Next(prev, quality);
+
+  // ❌ Sai — mô tả cái code đã nói rõ
+  // Gọi hàm sm2Next với prev và quality
+  return sm2Next(prev, quality);
+  ```
+- **JSDoc tiếng Việt** cho hàm public của `lib/repositories/*`, `lib/ai/prompts/*`, mọi server action:
+  ```ts
+  /**
+   * Lưu từ mới vào deck của user hiện tại.
+   * @param supabase  Client đã mang JWT (RLS sẽ tự filter theo auth.uid()).
+   * @param input     Đã được Zod parse ở Server Action gọi đến.
+   * @returns Row vừa insert; throw nếu vi phạm unique (lemma + deck_id).
+   */
+  async save(supabase: SupabaseClient, input: SaveVocabInput) { … }
+  ```
+- TODO phải có owner + lý do: `// TODO(@khanh): chờ Gemini 3.1 hỗ trợ JSON mode chính thức`.
+- Không comment-out code trong commit — xoá hẳn (git history giữ lại).
 
 ---
 
@@ -292,8 +370,8 @@ export default function VocabPage() {
 
 ## 9. Giao tiếp với user
 
-- **Tiếng Việt** mặc định khi viết comment, commit message, PR description.
-- Comment trong code: tiếng Anh ngắn gọn (để dễ Google khi gặp lỗi).
+- **Tiếng Việt** mặc định cho mọi thứ: comment, commit message, PR description, code review.
+- Comment trong code: **tiếng Việt ngắn gọn**, giải thích *tại sao* (không phải *cái gì*). Chi tiết xem §3.9.
 - Commit theo Conventional Commits: `feat: thêm SRS scheduler`, `fix(vocab): popup không đóng khi click ngoài`.
 - PR có mô tả: **Mục đích** / **Thay đổi** / **Cách test** / **Ảnh chụp UI** (nếu có).
 - Khi không chắc, **hỏi**. Đừng đoán mò trên domain nghiệp vụ (CEFR, IELTS rubric, SRS).

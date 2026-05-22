@@ -43,7 +43,7 @@ Fail → **DỪNG**, sửa, không commit.
 - [ ] Server Action có Zod `safeParse` đầu vào không?
 - [ ] Server Action có gọi `revalidateTag(tag, 'max')` HOẶC `updateTag(tag)` (Next 16) sau mutation?
   - `updateTag` cho read-your-writes (UI cần update ngay, vd. save speaking attempt).
-  - `revalidateTag` cho content acceptable stale (vd. content_sources catalog).
+  - `revalidateTag` cho content acceptable stale (vd. nguon_noi_dung catalog).
 - [ ] LLM call qua `llm()` từ `lib/ai/provider.ts`? KHÔNG import `@google/genai` trực tiếp trong feature code?
 - [ ] User input trong prompt LLM có XML delimiter (`<target>`, `<user-transcript>`, `<essay>`)?
 - [ ] LLM response có Zod schema parse + retry/fallback?

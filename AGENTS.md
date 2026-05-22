@@ -42,6 +42,18 @@ src/
 4. **LLM call qua `llm()`** từ `lib/ai/provider.ts`. Không import `@google/genai` trực tiếp trong feature code.
 5. **i18n.** Mọi UI string qua `useTranslations()`. Tiếng Việt mặc định, gọi user là `bạn`. Không emoji trong UI.
 
+## Clean code & chú thích (chi tiết: [docs/AGENT.md §3.9](docs/AGENT.md))
+
+- **Đặt tên đầy đủ nghĩa.** `dueWords` thay vì `dw`; `gradeReviewAction` thay vì `doIt`. Không viết tắt domain (CEFR, IELTS, SRS giữ nguyên).
+- **Hàm ≤ 40 dòng, 1 nhiệm vụ.** Nếu phải scroll để đọc hết → tách.
+- **Early return** thay vì lồng `if`. Không `else` sau `return`.
+- **Không magic number / magic string** — gom vào const có tên (`MAX_REVIEW_BATCH = 20`).
+- **Immutable mặc định** — `const` + spread/`map`, không mutate tham số.
+- **Không catch nuốt lỗi.** `catch` phải log + re-throw hoặc trả lỗi có nghĩa cho user.
+- **DRY có chừng mực** — lặp 3 lần mới trừu tượng hoá; 2 lần chấp nhận.
+- **Comment = tiếng Việt, giải thích *tại sao*.** Không mô tả *cái gì* (code tự nói). Ví dụ: `// Dùng SM-2 thay vì FSRS vì dataset hiện chưa đủ để fit FSRS`. Tránh comment rác (`// loop qua mảng`).
+- **JSDoc tiếng Việt** cho hàm public của repository / server action / prompt builder — mô tả input, output, side effect.
+
 ## Bảo mật (chi tiết: [docs/ARCHITECTURE.md §11](docs/ARCHITECTURE.md))
 
 - RLS bật trên **100%** bảng `public.*` user-owned + 4 policy (select/insert/update/delete).
