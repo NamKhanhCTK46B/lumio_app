@@ -102,6 +102,55 @@ from auth.users u
 where u.email like '%@lumio.vn'
 on conflict (provider_id, provider) do nothing;
 
+-- ============================================================================
+-- 1.b OWNER USER — Nam Khánh (admin / personal account)
+-- ============================================================================
+-- Password gốc: '#NgNamkhanh!1109' (KHÔNG commit plaintext vào git).
+-- Hash bcrypt cost 10 dưới được tạo trước qua:
+--   docker exec supabase_db_lumio psql -U postgres -d postgres -At \
+--     -c "select crypt('#NgNamkhanh!1109', gen_salt('bf', 10))"
+-- Để rotate: chạy lại lệnh trên với password mới, dán hash mới vào.
+
+insert into auth.users (
+  id, instance_id, aud, role, email, encrypted_password,
+  email_confirmed_at, raw_user_meta_data, created_at, updated_at,
+  confirmation_token, email_change, email_change_token_new, recovery_token
+)
+values (
+  '99999999-9999-9999-9999-999999999999'::uuid,
+  '00000000-0000-0000-0000-000000000000',
+  'authenticated', 'authenticated',
+  'khanh51024@gmail.com',
+  '$2a$10$bJl5OTLatkkdC0qbgOhtReol6g3MQgx.Q4Wuq/1EpROBJUczaLJUO',
+  now(),
+  jsonb_build_object('full_name', 'Nam Khánh', 'provider', 'email'),
+  now() - interval '1 day', now() - interval '1 day',
+  '', '', '', ''
+)
+on conflict (id) do update set
+  encrypted_password = excluded.encrypted_password,
+  raw_user_meta_data = excluded.raw_user_meta_data,
+  updated_at = now();
+
+insert into auth.identities (
+  provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+)
+values (
+  '99999999-9999-9999-9999-999999999999',
+  '99999999-9999-9999-9999-999999999999'::uuid,
+  jsonb_build_object(
+    'sub', '99999999-9999-9999-9999-999999999999',
+    'email', 'khanh51024@gmail.com',
+    'email_verified', true,
+    'phone_verified', false
+  ),
+  'email',
+  now(),
+  now() - interval '1 day',
+  now() - interval '1 day'
+)
+on conflict (provider_id, provider) do nothing;
+
 -- Cập nhật ho_so (trigger đã insert hàng cơ bản — bổ sung trinh_do, mục tiêu UX).
 update public.ho_so set
   trinh_do_cefr = 'A2', do_tin_cefr = 0.78, mui_gio = 'Asia/Ho_Chi_Minh',
@@ -129,6 +178,14 @@ update public.ho_so set
   so_dien_thoai = '+84 905 678 901'
   where id = '55555555-5555-5555-5555-555555555555';
 
+-- Owner user — pre-onboarded, sẵn sàng vào dashboard
+update public.ho_so set
+  ten_hien_thi = 'Nam Khánh',
+  trinh_do_cefr = 'B2', do_tin_cefr = 0.85,
+  phut_moi_ngay = 30, mui_gio = 'Asia/Ho_Chi_Minh',
+  hoan_tat_onboard_luc = now() - interval '1 day'
+  where id = '99999999-9999-9999-9999-999999999999';
+
 -- ============================================================================
 -- 2. MUC_TIEU_ND — Mục tiêu chính cho mỗi user
 -- ============================================================================
@@ -139,7 +196,8 @@ values
   ('22222222-2222-2222-2222-222222222222', 'giao_tiep', null, null,         false),
   ('33333333-3333-3333-3333-333333333333', 'toeic',     800,  '2026-10-30', true),
   ('44444444-4444-4444-4444-444444444444', 'giao_tiep', null, null,         true),
-  ('55555555-5555-5555-5555-555555555555', 'hoc_thuat', null, '2027-03-01', true);
+  ('55555555-5555-5555-5555-555555555555', 'hoc_thuat', null, '2027-03-01', true),
+  ('99999999-9999-9999-9999-999999999999', 'ielts',     7.0,  '2026-12-31', true);
 
 -- ============================================================================
 -- 3. NHAN_VAT — Catalog persona roleplay (public)

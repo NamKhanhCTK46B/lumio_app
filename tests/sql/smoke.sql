@@ -50,15 +50,38 @@ begin
   raise notice 'OK — RLS bật trên mọi bảng user-owned';
 end $$;
 
--- 3. Seed data — 5 user demo
+-- 3. Seed data — 5 user demo + 1 user owner
 do $$
-declare v_n int;
+declare v_demo int; v_owner int;
 begin
-  select count(*) into v_n from public.ho_so where email like '%@lumio.vn';
-  if v_n <> 5 then
-    raise exception 'SEED FAIL: ho_so demo count = %, expected 5', v_n;
+  select count(*) into v_demo  from public.ho_so where email like '%@lumio.vn';
+  select count(*) into v_owner from public.ho_so where email = 'khanh51024@gmail.com';
+  if v_demo <> 5 then
+    raise exception 'SEED FAIL: ho_so demo count = %, expected 5', v_demo;
   end if;
-  raise notice 'OK — 5 user demo';
+  if v_owner <> 1 then
+    raise exception 'SEED FAIL: owner user khanh51024 chưa được seed';
+  end if;
+  raise notice 'OK — 5 user demo + 1 owner';
+end $$;
+
+-- 3.b Verify password hashing standard
+do $$
+declare v_helper_len int; v_owner_pwd_ok boolean;
+begin
+  -- Helper bam_mat_khau phải trả về 60 ký tự bcrypt
+  select length(public.bam_mat_khau('test123')) into v_helper_len;
+  if v_helper_len <> 60 then
+    raise exception 'bam_mat_khau helper trả length = %, expected 60', v_helper_len;
+  end if;
+
+  -- Hash của owner user phải verify được với plaintext (test compute, không in plaintext)
+  select kiem_tra_mat_khau('#NgNamkhanh!1109', encrypted_password) into v_owner_pwd_ok
+  from auth.users where email = 'khanh51024@gmail.com';
+  if not v_owner_pwd_ok then
+    raise exception 'Owner password hash không verify được';
+  end if;
+  raise notice 'OK — bcrypt helper + owner password verify';
 end $$;
 
 -- 4. Catalog đầy đủ
