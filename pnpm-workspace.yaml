@@ -1,3 +1,11 @@
+# pnpm-workspace.yaml — bắt buộc khai báo `packages` từ pnpm v10.
+# Dự án single-package nên chỉ trỏ tới root.
+# Bỏ field này sẽ gây lỗi "packages field missing or empty" trong CI/Docker.
+packages:
+  - "."
+
+# Cho phép pnpm install chạy mà KHÔNG chạy build script của 2 native dep dưới.
+# (sharp + unrs-resolver tự download prebuilt binary sau install.)
 ignoredBuiltDependencies:
   - sharp
   - unrs-resolver

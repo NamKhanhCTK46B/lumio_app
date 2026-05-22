@@ -2,6 +2,7 @@
   "name": "lumio-app",
   "version": "0.1.0",
   "private": true,
+  "packageManager": "pnpm@9.15.0",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -13,7 +14,7 @@
     "supabase:reset": "supabase db reset",
     "supabase:diff": "supabase db diff -f",
     "supabase:push": "supabase db push",
-    "supabase:link": "supabase link --project-ref %SUPABASE_PROJECT_REF%",
+    "supabase:link": "supabase link",
     "supabase:types": "supabase gen types typescript --local > src/types/supabase.ts"
   },
   "dependencies": {
