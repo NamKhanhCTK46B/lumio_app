@@ -1,60 +1,97 @@
 ---
-name: feature
-description: Bắt đầu triển khai một use case (UC1–UC20) từ docs/USE_CASES.md
+description: Triển khai use case UC1–UC20 từ docs/USE_CASES.md (đọc section, lập kế hoạch file, dừng xác nhận nếu > 3 file mới).
+argument-hint: [UC-number]
+allowed-tools: Read Grep Glob Edit Write Bash(pnpm typecheck) Bash(pnpm lint) Bash(pnpm test) Bash(pnpm exec *)
 model: claude-opus-4-7
-thinking: medium
+effort: medium
 ---
 
-# /feature <UCx>
+# /feature `$ARGUMENTS`
 
-Triển khai một tính năng dựa trên use case có sẵn trong `docs/USE_CASES.md`.
+Triển khai use case UC$ARGUMENTS theo `docs/USE_CASES.md`. Trọng tâm Lumio: **luyện đọc / phát âm / giao tiếp tiếng Anh** cho người Việt.
 
-## Quy trình bắt buộc
+## Quy trình bắt buộc (đọc 1 sec / step trước khi gọi tool)
 
-1. **Đọc use case** tương ứng (chỉ section UCx, không read full file).
-   ```
-   Grep "^### UCx" docs/USE_CASES.md → lấy line number
-   Read docs/USE_CASES.md offset=<line> limit=80
-   ```
+### Bước 1 — Đọc use case hẹp
 
-2. **Xác định bảng DB** đụng tới. Nếu schema chưa đủ:
-   - Liệt kê bảng/cột cần thêm
-   - **DỪNG**, gọi `/migration` trước
+```
+Grep "^### UC$ARGUMENTS\b" docs/USE_CASES.md          # lấy line number
+Read docs/USE_CASES.md offset=<line> limit=80          # KHÔNG read full file
+```
 
-3. **Lập kế hoạch file** (đường dẫn cụ thể, KHÔNG tạo file ngay):
-   - Server Action: `src/app/(app)/<feature>/actions.ts`
-   - Zod schema: `src/lib/schemas/<feature>.ts`
-   - Repository (nếu chưa có): `src/lib/repositories/<entity>.repo.ts`
-   - Page (Server Component): `src/app/(app)/<feature>/page.tsx`
-   - Client component: `src/app/(app)/<feature>/_components/<name>.tsx`
-   - i18n keys: `messages/vi.json`, `messages/en.json`
+Tóm tắt 1 câu use case đang triển khai. Nếu nội dung không khớp UC trong `docs/USE_CASES.md` → **dừng, hỏi user**.
 
-4. **Xác nhận với user** nếu > 3 file mới sẽ được tạo.
+### Bước 2 — Check schema DB
 
-5. **Thứ tự triển khai:**
-   1. Zod schema
-   2. Repository method (test unit trước)
-   3. Server Action
-   4. Server Component (page)
-   5. Client component (nếu cần `'use client'`)
-   6. i18n key
-   7. E2E test (Playwright) nếu là user-journey chính
+```
+Grep "^## \d+\. `<bảng_dự_đoán>`" docs/DATABASE.md
+```
 
-6. **Sau mỗi file:** `pnpm typecheck` → fix nếu fail.
+- Nếu bảng/cột đã có → tiếp tục.
+- Nếu thiếu → **dừng**, gợi ý user gọi `/migration <slug>` trước.
 
-7. **Sau khi xong tính năng:** `/review` rồi commit theo Conventional Commits.
+### Bước 3 — Lập kế hoạch file (path cụ thể, KHÔNG tạo file ngay)
 
-## Quy tắc
+Template paths Lumio:
 
-- Server Action wrap input bằng Zod (`SaveVocabSchema.safeParse(input)`)
-- Server Component fetch trực tiếp qua `createClient()` — KHÔNG fetch API
-- LLM call qua `llm()` từ `lib/ai/provider.ts` — KHÔNG import Gemini SDK
-- Mọi text UI qua `useTranslations()` — KHÔNG hardcode chuỗi
-- RLS lo phần auth — KHÔNG `where user_id = ...`
+- Server Action: `src/app/(app)/<feature>/actions.ts`
+- Zod schema: `src/lib/schemas/<feature>.ts`
+- Repository (nếu chưa có): `src/lib/repositories/<entity>.repo.ts`
+- Page (Server Component): `src/app/(app)/<feature>/page.tsx`
+- Client component: `src/app/(app)/<feature>/_components/<name>.tsx`
+- i18n key: `messages/vi.json`, `messages/en.json`
+- (Speaking/Reader) STT/TTS helper: `src/lib/speech/{stt,tts}.ts`
+- (LLM) Prompt: `src/lib/ai/prompts/<feature>.ts`
+- Test: cùng folder với `.test.ts`
+
+### Bước 4 — Xác nhận user nếu > 3 file mới
+
+Liệt kê paths + lý do từng file. Đợi user "OK" rồi mới Read/Edit/Write.
+
+### Bước 5 — Thứ tự triển khai (1 file mỗi vòng + typecheck sau mỗi file)
+
+1. Zod schema (`lib/schemas/<feature>.ts`)
+2. Repository method + unit test
+3. Server Action (wrap input bằng `safeParse`, return plain object)
+4. Server Component (page)
+5. Client component (chỉ thêm `'use client'` khi thực sự cần)
+6. i18n key (vi + en)
+7. Test E2E nếu là user-journey chính (Speaking, Reader, Roleplay)
+
+Sau mỗi file:
+
+```
+pnpm typecheck
+```
+
+Fail → dừng, fix trước khi tiếp.
+
+### Bước 6 — `/review` → đề xuất commit
+
+Commit Conventional Commits tiếng Việt:
+
+```
+feat(<scope>): <subject < 72 ký tự>
+Refs: UC$ARGUMENTS
+```
+
+## Quy tắc API (Next.js 16 + Supabase SSR 2026)
+
+- ✅ **`await cookies()`** (Next 16 async). `createClient()` ở `src/lib/supabase/server.ts` đã await.
+- ✅ **`supabase.auth.getClaims()`** server-side, **KHÔNG** dùng `getSession()` (không revalidate token).
+- ✅ **`revalidateTag(tag, 'max')`** — Next 16 yêu cầu 2 arg (cacheLife profile).
+- ✅ **`updateTag('speak:'+userId)`** trong Server Action khi cần read-your-writes (UI update ngay sau mutation).
+- ✅ **`proxy.ts`** (không `middleware.ts` — Next 16 đổi tên).
+- ✅ Server Action wrap input bằng Zod `safeParse`.
+- ✅ LLM call qua `llm()` từ `lib/ai/provider.ts`, **không** import `@google/genai` trực tiếp trong feature code.
+- ✅ Mọi text UI qua `useTranslations()`.
+- ✅ RLS lo phần auth — **không** `where user_id = ...` thủ công.
+- ✅ Rate limit `@upstash/ratelimit` cho mọi endpoint AI (vd. 30 speaking-attempt/giờ/user).
 
 ## Tham chiếu
 
-- Quy ước stack: `AGENTS.md` (project root) + `docs/AGENT.md §1–3`
-- Pattern phần mềm: `docs/DESIGN_PATTERNS.md`
-- Schema bảng: `docs/DATABASE.md`
-- Phiên bản package: `docs/TECH_STACK.md`
+- Stack: `AGENTS.md` (project root) + `docs/AGENT.md §1–3`.
+- Pattern: `docs/DESIGN_PATTERNS.md`.
+- Schema: `docs/DATABASE.md`.
+- Use case: `docs/USE_CASES.md`.
+- Prompt mẫu: `docs/PROMPTS.md §2` (Speaking), `§12` (Roleplay).
