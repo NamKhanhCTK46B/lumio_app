@@ -42,4 +42,13 @@ yarn-error.log*
 next-env.d.ts
 
 # design system docs (local-only reference for AI agents, not pushed)
-/docs/
+/docs/*
+/docs/**/*
+# Ngoại lệ: setup guide public (cho developer mới + reviewer PR)
+!/docs/SETUP_SUPABASE.md
+!/docs/SETUP_OAUTH.md
+
+# Supabase CLI workspaces
+/supabase/.branches/
+/supabase/.temp/
+/supabase/logs/
