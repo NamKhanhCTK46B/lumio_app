@@ -15,7 +15,7 @@ export function OAuthButtons() {
       <button
         type="button"
         disabled={pending}
-        onClick={() => start(() => dangNhapOAuthAction("google"))}
+        onClick={() => start(async () => { await dangNhapOAuthAction("google"); })}
         className="flex h-11 items-center justify-center gap-3 rounded-md border border-slate-300 bg-white px-4 text-sm font-medium text-slate-900 transition hover:bg-slate-50 disabled:opacity-50"
       >
         <GoogleIcon />
@@ -25,7 +25,7 @@ export function OAuthButtons() {
       <button
         type="button"
         disabled={pending}
-        onClick={() => start(() => dangNhapOAuthAction("facebook"))}
+        onClick={() => start(async () => { await dangNhapOAuthAction("facebook"); })}
         className="flex h-11 items-center justify-center gap-3 rounded-md bg-[#1877F2] px-4 text-sm font-medium text-white transition hover:bg-[#166FE5] disabled:opacity-50"
       >
         <FacebookIcon />
