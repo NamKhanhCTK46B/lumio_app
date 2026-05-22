@@ -75,5 +75,6 @@ create policy "audio_owner_delete"
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
-comment on column storage.objects.name is
-  'Convention: <user_id>/<feature>/<filename>. Vd: avatars/<uid>/avatar.png, audio/<uid>/speaking/<turn-id>.webm';
+-- Convention path: <user_id>/<feature>/<filename>
+-- Vd: avatars/<uid>/avatar.png, audio/<uid>/speaking/<turn-id>.webm
+-- (Không thể `comment on column storage.objects.name` vì bảng do Supabase quản lý.)

@@ -53,14 +53,15 @@ create policy "phien_noi_owner_insert" on public.phien_noi for insert with check
 create policy "phien_noi_owner_update" on public.phien_noi for update using (auth.uid() = nguoi_dung_id);
 create policy "phien_noi_owner_delete" on public.phien_noi for delete using (auth.uid() = nguoi_dung_id);
 
--- 9. luot_noi — partitioned by month theo tao_luc -----------------------
--- Tối ưu #1: partition giảm scan cho query gần đây.
--- Tối ưu #4: BRIN index trên tao_luc (append-only).
+-- 9. luot_noi — bảng append-only, BRIN index để giữ index nhẹ -----------
+-- Tối ưu #4: BRIN trên tao_luc (rẻ ~1% size btree).
 -- Tối ưu #6: pg_jsonschema validate sua_loi.
+-- (Tối ưu #1 partition đã bỏ — pg_partman chưa available trong local image.
+--  Thêm lại khi scale > 1M rows qua migration mới.)
 
 create table public.luot_noi (
-  id              uuid not null default uuid_generate_v4(),
-  phien_id        uuid not null,
+  id              uuid primary key default uuid_generate_v4(),
+  phien_id        uuid not null references public.phien_noi(id) on delete cascade,
   thu_tu_luot     int not null,
   vai             vai_nguoi_noi not null,
   noi_dung        text not null,
@@ -74,22 +75,12 @@ create table public.luot_noi (
     )
   ),
   tao_luc         timestamptz not null default now(),
-  primary key (id, tao_luc),
-  unique (phien_id, thu_tu_luot, tao_luc)
-) partition by range (tao_luc);
-
--- Tạo partition tự động qua pg_partman (1 partition / tháng, premake 3 tháng tới)
-select partman.create_parent(
-  p_parent_table => 'public.luot_noi',
-  p_control      => 'tao_luc',
-  p_type         => 'range',
-  p_interval     => '1 month',
-  p_premake      => 3
+  unique (phien_id, thu_tu_luot)
 );
 
--- BRIN index — rẻ cho bảng append-only theo thời gian.
+-- BRIN — rẻ cho bảng append-only theo thời gian (~1% size btree).
 create index idx_luot_noi_brin on public.luot_noi using brin (tao_luc) with (pages_per_range = 32);
--- btree cho query render hội thoại theo thứ tự.
+-- btree cho query render hội thoại theo thứ tự (nhanh hơn BRIN cho equality).
 create index idx_luot_noi_phien on public.luot_noi (phien_id, thu_tu_luot);
 
 -- RLS — kiểm tra owner qua phien_noi.

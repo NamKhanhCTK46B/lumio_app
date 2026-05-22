@@ -43,9 +43,6 @@ select cron.schedule(
   $$
 );
 
--- Job 4: 00:00 ICT — bảo trì partition (tạo partition mới, drop quá cũ nếu cấu hình).
-select cron.schedule(
-  'partman_maintenance',
-  '0 17 * * *',
-  $$ call partman.run_maintenance_proc(); $$
-);
+-- Job 4 (đã bỏ): partman_maintenance — không cần khi luot_noi + phien_hoc
+-- là bảng thường (không partition). Khi nâng cấp lên partition sau này
+-- sẽ thêm lại job này hoặc viết function plpgsql tự tạo partition.

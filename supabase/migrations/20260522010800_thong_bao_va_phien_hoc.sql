@@ -24,31 +24,20 @@ create policy "thong_bao_owner_insert" on public.thong_bao for insert with check
 create policy "thong_bao_owner_update" on public.thong_bao for update using (auth.uid() = nguoi_dung_id);
 create policy "thong_bao_owner_delete" on public.thong_bao for delete using (auth.uid() = nguoi_dung_id);
 
--- 20. phien_hoc — activity log cho streak (partitioned monthly) ---------
--- Tối ưu #1: partition + Tối ưu #4: BRIN. Tối ưu #5: check thoi_luong >= 0.
+-- 20. phien_hoc — activity log cho streak ---------------------------
+-- Tối ưu #4: BRIN trên bat_dau_luc. Tối ưu #5: CHECK thoi_luong >= 0.
+-- (Tối ưu #1 partition tạm bỏ — xem migration 01.)
 
 create table public.phien_hoc (
-  id                uuid not null default uuid_generate_v4(),
-  nguoi_dung_id     uuid not null,
+  id                uuid primary key default uuid_generate_v4(),
+  nguoi_dung_id     uuid not null references public.ho_so(id) on delete cascade,
   loai_hoat_dong    loai_hoat_dong not null,
   entity_id         uuid,
   bat_dau_luc       timestamptz not null,
   ket_thuc_luc      timestamptz,
   thoi_luong_giay   int check (thoi_luong_giay is null or thoi_luong_giay >= 0),
   chi_so            jsonb,
-  tao_luc           timestamptz not null default now(),
-  primary key (id, bat_dau_luc)
-) partition by range (bat_dau_luc);
-
--- FK declarative không được trên partitioned table khi có pg_partman quản lý;
--- ràng buộc owner sẽ check qua RLS.
-
-select partman.create_parent(
-  p_parent_table => 'public.phien_hoc',
-  p_control      => 'bat_dau_luc',
-  p_type         => 'range',
-  p_interval     => '1 month',
-  p_premake      => 3
+  tao_luc           timestamptz not null default now()
 );
 
 create index idx_phien_hoc_brin on public.phien_hoc using brin (bat_dau_luc) with (pages_per_range = 32);

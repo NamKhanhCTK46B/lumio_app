@@ -79,19 +79,28 @@ values
     '', '', '', ''
   );
 
--- Identity records cho từng user (cần để Supabase Auth nhận diện provider email)
-insert into auth.identities (id, user_id, identity_data, provider, provider_id, last_sign_in_at, created_at, updated_at)
+-- Identity records cho từng user. Supabase Auth 2024+ yêu cầu identity_data
+-- chứa "email" + "email_verified". provider_id format: dùng chính user.id cho
+-- email provider (Supabase convention).
+insert into auth.identities (
+  provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at
+)
 select
-  gen_random_uuid(),
-  u.id,
-  jsonb_build_object('sub', u.id::text, 'email', u.email),
-  'email',
   u.id::text,
+  u.id,
+  jsonb_build_object(
+    'sub', u.id::text,
+    'email', u.email,
+    'email_verified', true,
+    'phone_verified', false
+  ),
+  'email',
   now(),
   u.created_at,
   u.created_at
 from auth.users u
-where u.email like '%@lumio.vn';
+where u.email like '%@lumio.vn'
+on conflict (provider_id, provider) do nothing;
 
 -- Cập nhật ho_so (trigger đã insert hàng cơ bản — bổ sung trinh_do, mục tiêu UX).
 update public.ho_so set

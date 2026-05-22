@@ -74,12 +74,14 @@ client_id = "env(SUPABASE_AUTH_FACEBOOK_CLIENT_ID)"
 secret = "env(SUPABASE_AUTH_FACEBOOK_SECRET)"
 redirect_uri = "http://localhost:54321/auth/v1/callback"
 
-[functions]
-verify_jwt = true
-
 [analytics]
 enabled = false
 
 [edge_runtime]
 enabled = true
 policy = "oneshot"
+
+# Edge functions có thể được khai báo per-function:
+#   [functions.my-function]
+#   verify_jwt = true
+# Lumio chưa dùng edge function → để trống.

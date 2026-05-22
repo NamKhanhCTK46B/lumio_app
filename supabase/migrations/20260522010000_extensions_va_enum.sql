@@ -7,9 +7,11 @@ create extension if not exists pg_cron;       -- scheduled jobs nội DB
 create extension if not exists pg_trgm;       -- fuzzy text search từ vựng
 create extension if not exists pg_jsonschema; -- validate jsonb theo schema
 
--- pg_partman để quản lý partition tự động cho luot_noi + phien_hoc
-create schema if not exists partman;
-create extension if not exists pg_partman with schema partman;
+-- Lưu ý: pg_partman KHÔNG có sẵn trong Supabase local Postgres image
+-- (chỉ có ở cloud-managed). Đã chuyển luot_noi + phien_hoc sang dạng
+-- bảng thường để chạy được ở cả 2 môi trường. Khi scale > 1M rows,
+-- migrate sang Postgres native partition bằng migration mới + bảo trì
+-- partition bằng plpgsql function thay vì pg_partman.
 
 -- Enum dùng xuyên suốt schema. Đặt tên tiếng Việt, value snake_case không dấu.
 create type trinh_do_cefr  as enum ('A1','A2','B1','B2','C1','C2');

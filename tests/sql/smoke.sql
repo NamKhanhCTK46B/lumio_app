@@ -77,21 +77,20 @@ begin
   raise notice 'OK — catalog: nhan_vat=%, bo_tu_sys=%, de_bai=%', v_nhan_vat, v_bo_tu_sys, v_de_bai;
 end $$;
 
--- 5. Partition của luot_noi và phien_hoc
+-- 5. luot_noi + phien_hoc tồn tại + có BRIN index trên cột thời gian.
+-- (Partition đã bỏ tạm — sẽ thêm lại khi scale > 1M rows.)
 do $$
 declare v_n int;
 begin
-  select count(*) into v_n
-  from pg_inherits i
-  where inhparent = 'public.luot_noi'::regclass;
-  if v_n < 1 then raise exception 'luot_noi partition count = %, expected >= 1', v_n; end if;
+  select count(*) into v_n from pg_indexes
+   where schemaname = 'public' and tablename = 'luot_noi' and indexname = 'idx_luot_noi_brin';
+  if v_n <> 1 then raise exception 'idx_luot_noi_brin thiếu'; end if;
 
-  select count(*) into v_n
-  from pg_inherits i
-  where inhparent = 'public.phien_hoc'::regclass;
-  if v_n < 1 then raise exception 'phien_hoc partition count = %, expected >= 1', v_n; end if;
+  select count(*) into v_n from pg_indexes
+   where schemaname = 'public' and tablename = 'phien_hoc' and indexname = 'idx_phien_hoc_brin';
+  if v_n <> 1 then raise exception 'idx_phien_hoc_brin thiếu'; end if;
 
-  raise notice 'OK — partition cho luot_noi + phien_hoc';
+  raise notice 'OK — BRIN index trên luot_noi + phien_hoc';
 end $$;
 
 -- 6. MV streak phải có sau seed
