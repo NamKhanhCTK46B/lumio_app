@@ -40,3 +40,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# design system docs (local-only reference for AI agents, not pushed)
+/docs/

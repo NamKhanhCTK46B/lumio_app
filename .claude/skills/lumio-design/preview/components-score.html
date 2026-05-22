@@ -1,0 +1,22 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Lumio · Score panel</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--lm-bg);font-family:var(--lm-font-sans)}
+  .panel{background:var(--lm-bg-elev-1);border:1px solid var(--lm-border);border-radius:16px;padding:18px 20px;box-shadow:var(--lm-shadow-soft)}
+  .head{display:flex;align-items:baseline;gap:12px;margin-bottom:14px}
+  .overall{font-family:var(--lm-font-mono);font-weight:600;font-size:40px;color:var(--lm-fg);line-height:1}
+  .label{font-size:12px;color:var(--lm-fg-muted);letter-spacing:.04em}
+  .delta{margin-left:auto;font-size:13px;color:var(--lm-success);font-weight:600}
+  .row{display:grid;grid-template-columns:120px 1fr 40px;gap:10px;align-items:center;padding:4px 0;font-size:12px;color:var(--lm-fg)}
+  .bar{height:6px;background:var(--lm-bg-muted);border-radius:9999px;overflow:hidden}
+  .bar>div{height:100%;background:var(--lm-primary);border-radius:9999px}
+  .score{font-family:var(--lm-font-mono);text-align:right;color:var(--lm-fg);font-weight:600}
+</style></head><body>
+  <div class="panel">
+    <div class="head"><span class="overall">6.5</span><span class="label">Overall band · IELTS Task 2</span><span class="delta">▲ +0.5 vs last</span></div>
+    <div class="row"><span>Task achievement</span><div class="bar"><div style="width:75%"></div></div><span class="score">6.5</span></div>
+    <div class="row"><span>Coherence &amp; cohesion</span><div class="bar"><div style="width:78%"></div></div><span class="score">7.0</span></div>
+    <div class="row"><span>Lexical resource</span><div class="bar"><div style="width:67%"></div></div><span class="score">6.0</span></div>
+    <div class="row"><span>Grammar range</span><div class="bar"><div style="width:72%"></div></div><span class="score">6.5</span></div>
+  </div>
+</body></html>

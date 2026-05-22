@@ -1,0 +1,27 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Lumio · Card</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--lm-bg);font-family:var(--lm-font-sans);display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  .card{background:var(--lm-bg-elev-1);border:1px solid var(--lm-border);border-radius:16px;padding:18px 20px;box-shadow:var(--lm-shadow-soft);display:flex;flex-direction:column;gap:8px}
+  .head{display:flex;align-items:center;justify-content:space-between}
+  .ttl{font-size:16px;font-weight:600;color:var(--lm-fg)}
+  .chip{font-family:var(--lm-font-mono);font-size:10px;letter-spacing:.06em;padding:3px 7px;border-radius:4px;color:#fff;font-weight:600}
+  .meta{display:flex;align-items:center;gap:12px;font-size:12px;color:var(--lm-fg-muted);margin-top:auto}
+  .meta b{color:var(--lm-fg);font-weight:600}
+  .progress{height:6px;background:var(--lm-bg-muted);border-radius:9999px;overflow:hidden;margin-top:4px}
+  .progress > div{height:100%;background:var(--lm-primary);border-radius:9999px}
+  .cover{width:36px;height:36px;border-radius:10px;background:linear-gradient(135deg,#E8A33D,#D4912E);display:flex;align-items:center;justify-content:center;color:#1A1308;font-weight:700}
+</style></head><body>
+  <div class="card">
+    <div class="head"><div style="display:flex;gap:10px;align-items:center"><span class="cover">T</span><span class="ttl">Travel English</span></div><span class="chip" style="background:#5FB283">A2</span></div>
+    <p style="margin:0;font-size:13px;color:var(--lm-fg-muted)">Vocab for booking flights, hotels, asking directions.</p>
+    <div class="progress"><div style="width:64%"></div></div>
+    <div class="meta"><b>32</b> words · <b>21</b> mastered · <b>8</b> due</div>
+  </div>
+  <div class="card">
+    <div class="head"><div style="display:flex;gap:10px;align-items:center"><span class="cover" style="background:linear-gradient(135deg,#BD5B85,#7B3DA0);color:#fff">B</span><span class="ttl">Business meetings</span></div><span class="chip" style="background:#D98A2B">B2</span></div>
+    <p style="margin:0;font-size:13px;color:var(--lm-fg-muted)">Phrasal verbs and idioms for negotiations.</p>
+    <div class="progress"><div style="width:28%"></div></div>
+    <div class="meta"><b>48</b> words · <b>14</b> mastered · <b>5</b> due</div>
+  </div>
+</body></html>

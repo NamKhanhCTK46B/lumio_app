@@ -1,0 +1,334 @@
+/* ============================================================
+   Lumio — Colors & Typography
+   Drop-in CSS variables for both themes + base typography.
+   Switch theme with <html data-theme="dark"> or "light".
+   ============================================================ */
+
+/* ---- Fonts ---------------------------------------------------- */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+/* ============================================================
+   COLORS
+   ============================================================ */
+
+:root,
+[data-theme="light"] {
+  /* — Brand —————————————————————————————————————— */
+  --lm-primary:           #E8A33D;   /* amber-ochre — late-afternoon study light */
+  --lm-primary-hover:     #D4912E;
+  --lm-primary-press:     #B97A20;
+  --lm-primary-soft:      #FDF1DB;   /* tinted background */
+  --lm-primary-ink:       #6A4A14;   /* readable text on primary-soft */
+
+  /* — Surfaces (paper) ————————————————————————————— */
+  --lm-bg:                #FBF9F5;   /* page */
+  --lm-bg-elev-1:         #FFFFFF;   /* cards, popovers */
+  --lm-bg-elev-2:         #FFFFFF;   /* modals (same hue + bigger shadow) */
+  --lm-bg-muted:          #F4EFE5;   /* alt rows, code blocks */
+  --lm-bg-hover:          #F0E9DA;
+  --lm-bg-active:         #E8DEC8;
+
+  /* — Ink (foreground) ————————————————————————————— */
+  --lm-fg:                #0E1A2B;   /* primary text */
+  --lm-fg-muted:          #4A5567;   /* secondary text */
+  --lm-fg-subtle:         #7C8597;   /* tertiary / placeholders */
+  --lm-fg-on-primary:     #1A1308;   /* text on amber surfaces */
+  --lm-fg-inverse:        #FBF9F5;
+
+  /* — Borders ——————————————————————————————————— */
+  --lm-border:            #E5DDD0;
+  --lm-border-strong:     #C9BFA9;
+  --lm-border-focus:      var(--lm-primary);
+
+  /* — Semantic ————————————————————————————————— */
+  --lm-success:           #2F9E83;   /* teal — correct, mastered */
+  --lm-success-soft:      #DEF1EA;
+  --lm-success-ink:       #135649;
+
+  --lm-danger:            #D85A5A;   /* coral — errors, deletions */
+  --lm-danger-soft:       #FBE2E2;
+  --lm-danger-ink:        #7A2424;
+
+  --lm-warning:           #D98A2B;   /* darker than primary, for "attention" */
+  --lm-warning-soft:      #FBEAD0;
+  --lm-warning-ink:       #5A3608;
+
+  --lm-info:              #3F7BD8;   /* blue — neutral info */
+  --lm-info-soft:         #DEE9FA;
+  --lm-info-ink:          #163669;
+
+  /* — CEFR level chips ———————————————————————————— */
+  --lm-cefr-a1: #87C39A;  /* greens deepen as level rises */
+  --lm-cefr-a2: #5FB283;
+  --lm-cefr-b1: #E8A33D;
+  --lm-cefr-b2: #D98A2B;
+  --lm-cefr-c1: #BD5B85;
+  --lm-cefr-c2: #7B3DA0;
+
+  /* — Highlight (vocab over-level) ——————————————— */
+  --lm-highlight-underline: #E8A33D;
+  --lm-highlight-bg:        rgba(232, 163, 61, 0.12);
+
+  /* — Shadows —————————————————————————————————— */
+  --lm-shadow-soft:
+    0 1px 2px rgba(14, 26, 43, 0.04),
+    0 2px 8px rgba(14, 26, 43, 0.06);
+  --lm-shadow-pop:
+    0 4px 16px rgba(14, 26, 43, 0.08),
+    0 12px 32px rgba(14, 26, 43, 0.10);
+  --lm-shadow-focus:
+    0 0 0 3px rgba(232, 163, 61, 0.35);
+}
+
+[data-theme="dark"] {
+  --lm-primary:           #F2B255;   /* slightly brightened amber */
+  --lm-primary-hover:     #E8A33D;
+  --lm-primary-press:     #D4912E;
+  --lm-primary-soft:      #2E2417;
+  --lm-primary-ink:       #FAE0B0;
+
+  --lm-bg:                #0E1626;   /* deep ink */
+  --lm-bg-elev-1:         #16213A;
+  --lm-bg-elev-2:         #1B2845;
+  --lm-bg-muted:          #18233C;
+  --lm-bg-hover:          #1F2C4A;
+  --lm-bg-active:         #263555;
+
+  --lm-fg:                #F5EFE3;   /* warm cream */
+  --lm-fg-muted:          #B6BCC8;
+  --lm-fg-subtle:         #7C8597;
+  --lm-fg-on-primary:     #1A1308;
+  --lm-fg-inverse:        #0E1A2B;
+
+  --lm-border:            #25334D;
+  --lm-border-strong:     #3A4B6B;
+  --lm-border-focus:      var(--lm-primary);
+
+  --lm-success:           #4ABFA1;
+  --lm-success-soft:      #133029;
+  --lm-success-ink:       #B6E8DA;
+
+  --lm-danger:            #ED7676;
+  --lm-danger-soft:       #361A1A;
+  --lm-danger-ink:        #F5C9C9;
+
+  --lm-warning:           #F0A04A;
+  --lm-warning-soft:      #322008;
+  --lm-warning-ink:       #FAD9B0;
+
+  --lm-info:              #6395E8;
+  --lm-info-soft:         #122039;
+  --lm-info-ink:          #C5D7F5;
+
+  --lm-cefr-a1: #6FB389;
+  --lm-cefr-a2: #4FA275;
+  --lm-cefr-b1: #F2B255;
+  --lm-cefr-b2: #E29543;
+  --lm-cefr-c1: #D27498;
+  --lm-cefr-c2: #A267C2;
+
+  --lm-highlight-underline: #F2B255;
+  --lm-highlight-bg:        rgba(242, 178, 85, 0.16);
+
+  --lm-shadow-soft:
+    0 1px 2px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.4);
+  --lm-shadow-pop:
+    0 4px 16px rgba(0, 0, 0, 0.5),
+    0 12px 32px rgba(0, 0, 0, 0.6);
+  --lm-shadow-focus:
+    0 0 0 3px rgba(242, 178, 85, 0.35);
+}
+
+/* ============================================================
+   TYPOGRAPHY tokens
+   ============================================================ */
+
+:root {
+  --lm-font-sans:    'Plus Jakarta Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --lm-font-serif:   'Lora', Georgia, 'Times New Roman', serif;
+  --lm-font-mono:    'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  /* Type scale (modular: 1.250) */
+  --lm-text-2xs:  11px;
+  --lm-text-xs:   12px;
+  --lm-text-sm:   14px;
+  --lm-text-base: 16px;
+  --lm-text-md:   18px;
+  --lm-text-lg:   20px;
+  --lm-text-xl:   24px;
+  --lm-text-2xl:  30px;
+  --lm-text-3xl:  38px;
+  --lm-text-4xl:  48px;
+  --lm-text-5xl:  60px;
+
+  /* Line heights */
+  --lm-leading-tight:   1.15;
+  --lm-leading-snug:    1.32;
+  --lm-leading-normal:  1.55;
+  --lm-leading-relaxed: 1.72;
+
+  /* Letter spacing */
+  --lm-tracking-tight:  -0.02em;
+  --lm-tracking-normal: 0;
+  --lm-tracking-wide:   0.04em;
+  --lm-tracking-wider:  0.08em;   /* CEFR labels, tiny captions */
+
+  /* — Spacing (4-pt grid) ———————————————————————— */
+  --lm-space-1:  4px;
+  --lm-space-2:  8px;
+  --lm-space-3:  12px;
+  --lm-space-4:  16px;
+  --lm-space-5:  20px;
+  --lm-space-6:  24px;
+  --lm-space-8:  32px;
+  --lm-space-10: 40px;
+  --lm-space-14: 56px;
+  --lm-space-18: 72px;
+  --lm-space-24: 96px;
+
+  /* — Radii —————————————————————————————————————— */
+  --lm-radius-xs:   4px;
+  --lm-radius-sm:   8px;
+  --lm-radius-md:   12px;
+  --lm-radius-lg:   16px;
+  --lm-radius-xl:   24px;
+  --lm-radius-full: 9999px;
+
+  /* — Motion ————————————————————————————————————— */
+  --lm-ease:        cubic-bezier(.2, .8, .2, 1);
+  --lm-dur-fast:    120ms;
+  --lm-dur-base:    180ms;
+  --lm-dur-slow:    280ms;
+}
+
+/* ============================================================
+   Base resets + element styles
+   ============================================================ */
+
+html { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+
+body {
+  font-family: var(--lm-font-sans);
+  font-size: var(--lm-text-base);
+  line-height: var(--lm-leading-normal);
+  color: var(--lm-fg);
+  background: var(--lm-bg);
+  font-feature-settings: 'ss01' on, 'cv01' on;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Headings — sans, tight tracking, tight leading */
+h1, .lm-h1 {
+  font-family: var(--lm-font-sans);
+  font-weight: 700;
+  font-size: var(--lm-text-4xl);
+  line-height: var(--lm-leading-tight);
+  letter-spacing: var(--lm-tracking-tight);
+  color: var(--lm-fg);
+  text-wrap: balance;
+}
+h2, .lm-h2 {
+  font-family: var(--lm-font-sans);
+  font-weight: 700;
+  font-size: var(--lm-text-2xl);
+  line-height: var(--lm-leading-snug);
+  letter-spacing: var(--lm-tracking-tight);
+  color: var(--lm-fg);
+  text-wrap: balance;
+}
+h3, .lm-h3 {
+  font-family: var(--lm-font-sans);
+  font-weight: 600;
+  font-size: var(--lm-text-xl);
+  line-height: var(--lm-leading-snug);
+  color: var(--lm-fg);
+}
+h4, .lm-h4 {
+  font-family: var(--lm-font-sans);
+  font-weight: 600;
+  font-size: var(--lm-text-md);
+  line-height: var(--lm-leading-snug);
+  color: var(--lm-fg);
+}
+
+/* Body */
+p, .lm-p {
+  font-size: var(--lm-text-base);
+  line-height: var(--lm-leading-relaxed);
+  color: var(--lm-fg);
+  text-wrap: pretty;
+}
+
+/* Long-form reading (essay prompts, example sentences) — serif */
+.lm-reading {
+  font-family: var(--lm-font-serif);
+  font-size: var(--lm-text-md);
+  line-height: var(--lm-leading-relaxed);
+  color: var(--lm-fg);
+}
+.lm-example {
+  font-family: var(--lm-font-serif);
+  font-style: italic;
+  color: var(--lm-fg-muted);
+}
+
+/* Captions / tiny labels */
+.lm-caption {
+  font-size: var(--lm-text-xs);
+  line-height: var(--lm-leading-snug);
+  color: var(--lm-fg-muted);
+  letter-spacing: var(--lm-tracking-wide);
+}
+.lm-overline {
+  font-size: var(--lm-text-2xs);
+  line-height: 1;
+  letter-spacing: var(--lm-tracking-wider);
+  text-transform: uppercase;
+  color: var(--lm-fg-subtle);
+  font-weight: 600;
+}
+
+/* Mono — for CEFR codes, scores, code */
+code, .lm-mono {
+  font-family: var(--lm-font-mono);
+  font-size: 0.92em;
+  font-feature-settings: 'zero' on;
+}
+
+/* Vocabulary highlight — the "above your level" marking */
+.lm-vocab-highlight {
+  background: var(--lm-highlight-bg);
+  border-bottom: 2px dotted var(--lm-highlight-underline);
+  padding: 0 1px;
+  cursor: pointer;
+  transition: background var(--lm-dur-base) var(--lm-ease);
+}
+.lm-vocab-highlight:hover {
+  background: color-mix(in srgb, var(--lm-highlight-bg) 60%, var(--lm-primary) 40%);
+}
+
+/* Focus ring (accessibility) */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--lm-shadow-focus);
+  border-radius: var(--lm-radius-xs);
+}
+
+/* Selection */
+::selection {
+  background: var(--lm-highlight-underline);
+  color: var(--lm-fg-on-primary);
+}
+
+/* Links — use --lm-info for in-content links so they don't fight the primary */
+a {
+  color: var(--lm-info);
+  text-decoration: none;
+  text-underline-offset: 3px;
+  transition: color var(--lm-dur-fast) var(--lm-ease);
+}
+a:hover { text-decoration: underline; }

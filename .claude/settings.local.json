@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pnpm dlx *)",
+      "Bash(pnpm exec *)",
+      "Bash(pnpm run *)",
+      "Bash(git remote *)",
+      "Bash(git add *)"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Lumio · SRS buttons</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--lm-bg);font-family:var(--lm-font-sans);display:flex;flex-direction:column;gap:14px;align-items:center;justify-content:center;min-height:240px}
+  .legend{font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--lm-fg-subtle);font-weight:600}
+  .row{display:flex;gap:10px}
+  .grade{min-width:96px;padding:14px 12px;border-radius:12px;border:1px solid var(--lm-border);background:var(--lm-bg-elev-1);display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;font-family:var(--lm-font-sans)}
+  .grade strong{font-size:14px;color:var(--lm-fg)}
+  .grade span{font-family:var(--lm-font-mono);font-size:11px;color:var(--lm-fg-muted)}
+  .grade.again{background:#FBE2E2;border-color:#F5C9C9}
+  .grade.again strong{color:#7A2424}
+  .grade.hard{background:#FBEAD0;border-color:#F5E2B8}
+  .grade.hard strong{color:#5A3608}
+  .grade.good{background:#FFFFFF}
+  .grade.easy{background:#DEF1EA;border-color:#C4E6D9}
+  .grade.easy strong{color:#135649}
+</style></head><body>
+  <span class="legend">SM-2 grade buttons · vocab review</span>
+  <div class="row">
+    <button class="grade again"><strong>Lại</strong><span>&lt; 1m</span></button>
+    <button class="grade hard"><strong>Khó</strong><span>~ 1d</span></button>
+    <button class="grade good"><strong>Tốt</strong><span>~ 3d</span></button>
+    <button class="grade easy"><strong>Dễ</strong><span>~ 7d</span></button>
+  </div>
+</body></html>

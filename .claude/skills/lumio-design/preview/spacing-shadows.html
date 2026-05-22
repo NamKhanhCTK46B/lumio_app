@@ -1,0 +1,14 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Lumio · Shadows</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:32px;background:var(--lm-bg);font-family:var(--lm-font-sans);display:flex;gap:32px;align-items:center;justify-content:center;min-height:240px}
+  .item{display:flex;flex-direction:column;align-items:center;gap:10px}
+  .card{width:160px;height:96px;background:var(--lm-bg-elev-1);border:1px solid var(--lm-border);border-radius:16px;display:flex;align-items:center;justify-content:center;color:var(--lm-fg-muted);font-size:12px}
+  .soft{box-shadow:0 1px 2px rgba(14,26,43,.04), 0 2px 8px rgba(14,26,43,.06)}
+  .pop{box-shadow:0 4px 16px rgba(14,26,43,.08), 0 12px 32px rgba(14,26,43,.10)}
+  .lbl{font-family:var(--lm-font-mono);font-size:11px;color:var(--lm-fg);font-weight:500}
+  .desc{font-size:11px;color:var(--lm-fg-muted)}
+</style></head><body>
+  <div class="item"><div class="card soft">Resting card</div><span class="lbl">shadow-soft</span><span class="desc">Cards · default</span></div>
+  <div class="item"><div class="card pop">Floating popup</div><span class="lbl">shadow-pop</span><span class="desc">Modals · popovers</span></div>
+</body></html>

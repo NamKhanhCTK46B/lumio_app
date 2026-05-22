@@ -1,0 +1,24 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Lumio · Toast</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--lm-bg);font-family:var(--lm-font-sans);display:flex;flex-direction:column;gap:12px;justify-content:center;min-height:200px;align-items:flex-start}
+  .toast{display:flex;align-items:center;gap:12px;background:rgba(255,255,255,.92);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--lm-border);border-radius:12px;padding:12px 16px;box-shadow:var(--lm-shadow-pop);min-width:380px;max-width:560px}
+  .ico{width:32px;height:32px;border-radius:9999px;display:flex;align-items:center;justify-content:center;flex:none}
+  .review{background:#FDF1DB;color:#6A4A14}
+  .success{background:#DEF1EA;color:#135649}
+  .body{flex:1}
+  .ttl{font-size:13px;font-weight:600;color:var(--lm-fg)}
+  .sub{font-size:12px;color:var(--lm-fg-muted);margin-top:1px}
+  .cta{font-size:12px;font-weight:600;color:var(--lm-primary-press);background:transparent;border:none;cursor:pointer}
+  svg{width:16px;height:16px}
+</style></head><body>
+  <div class="toast">
+    <div class="ico review"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 8v4l3 3"/><circle cx="12" cy="12" r="10"/></svg></div>
+    <div class="body"><div class="ttl">Bạn có 8 từ cần ôn hôm nay</div><div class="sub">Chỉ tốn 3 phút để giữ chuỗi của bạn.</div></div>
+    <button class="cta">Bắt đầu</button>
+  </div>
+  <div class="toast">
+    <div class="ico success"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+    <div class="body"><div class="ttl">Đã lưu "scrutinize" vào sổ từ</div><div class="sub">Sẽ xuất hiện trong bài ôn ngày mai.</div></div>
+  </div>
+</body></html>

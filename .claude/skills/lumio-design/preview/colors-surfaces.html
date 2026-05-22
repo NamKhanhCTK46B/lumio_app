@@ -1,0 +1,39 @@
+<!doctype html><html><head><meta charset="utf-8"><title>Lumio · Surfaces</title>
+<link rel="stylesheet" href="../colors_and_type.css">
+<style>
+  body{margin:0;padding:24px;background:var(--lm-bg);font-family:var(--lm-font-sans)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+  .panel{border-radius:var(--lm-radius-lg);padding:18px;border:1px solid var(--lm-border)}
+  .panel.light{background:#FBF9F5;color:#0E1A2B}
+  .panel.dark{background:#0E1626;color:#F5EFE3;border-color:#25334D}
+  .stack{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .ttl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;opacity:.7}
+  .swatch{display:flex;align-items:center;gap:10px;font-size:12px}
+  .dot{width:24px;height:24px;border-radius:6px;border:1px solid rgba(0,0,0,.08);flex:none}
+  .panel.dark .dot{border-color:rgba(255,255,255,.08)}
+  .name{flex:1}
+  .hex{font-family:var(--lm-font-mono);opacity:.7}
+</style></head><body>
+  <div class="row">
+    <div class="panel light">
+      <div class="ttl">Daylight · light</div>
+      <div class="stack">
+        <div class="swatch"><span class="dot" style="background:#FBF9F5"></span><span class="name">bg</span><span class="hex">#FBF9F5</span></div>
+        <div class="swatch"><span class="dot" style="background:#FFFFFF"></span><span class="name">bg-elev-1</span><span class="hex">#FFFFFF</span></div>
+        <div class="swatch"><span class="dot" style="background:#F4EFE5"></span><span class="name">bg-muted</span><span class="hex">#F4EFE5</span></div>
+        <div class="swatch"><span class="dot" style="background:#E5DDD0"></span><span class="name">border</span><span class="hex">#E5DDD0</span></div>
+        <div class="swatch"><span class="dot" style="background:#0E1A2B"></span><span class="name">fg</span><span class="hex">#0E1A2B</span></div>
+      </div>
+    </div>
+    <div class="panel dark">
+      <div class="ttl">Lamplight · dark</div>
+      <div class="stack">
+        <div class="swatch"><span class="dot" style="background:#0E1626"></span><span class="name">bg</span><span class="hex">#0E1626</span></div>
+        <div class="swatch"><span class="dot" style="background:#16213A"></span><span class="name">bg-elev-1</span><span class="hex">#16213A</span></div>
+        <div class="swatch"><span class="dot" style="background:#18233C"></span><span class="name">bg-muted</span><span class="hex">#18233C</span></div>
+        <div class="swatch"><span class="dot" style="background:#25334D"></span><span class="name">border</span><span class="hex">#25334D</span></div>
+        <div class="swatch"><span class="dot" style="background:#F5EFE3"></span><span class="name">fg</span><span class="hex">#F5EFE3</span></div>
+      </div>
+    </div>
+  </div>
+</body></html>
