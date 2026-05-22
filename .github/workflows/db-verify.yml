@@ -1,0 +1,42 @@
+name: DB verify (migrations apply clean)
+
+on:
+  pull_request:
+    paths:
+      - "supabase/migrations/**"
+      - "supabase/seed.sql"
+      - "supabase/config.toml"
+      - ".github/workflows/db-verify.yml"
+
+concurrency:
+  group: db-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Apply migrations + seed trong Supabase local
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Start Supabase local
+        run: supabase start
+
+      - name: Reset DB (apply migrations + seed.sql)
+        run: supabase db reset --no-seed=false
+
+      - name: Smoke test schema
+        env:
+          PGPASSWORD: postgres
+        run: |
+          psql -h localhost -p 54322 -U postgres -d postgres -v ON_ERROR_STOP=1 \
+            -f tests/sql/smoke.sql
+
+      - name: Cleanup
+        if: always()
+        run: supabase stop --no-backup

@@ -1,0 +1,52 @@
+name: DB push (remote)
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Môi trường đích"
+        required: true
+        default: production
+        type: choice
+        options: [production, staging]
+      dry_run:
+        description: "Chỉ dry-run (không apply)"
+        required: false
+        default: true
+        type: boolean
+
+# Cần GitHub secrets:
+#   SUPABASE_ACCESS_TOKEN  — https://app.supabase.com/account/tokens
+#   SUPABASE_DB_PASSWORD   — DB password (Supabase Dashboard → Settings → Database)
+#   SUPABASE_PROJECT_REF   — project-ref của project đích (vd. abcdefghijklm)
+
+concurrency:
+  group: db-push-${{ inputs.environment }}
+  cancel-in-progress: false   # KHÔNG cancel — migration đang chạy không được ngắt
+
+jobs:
+  push:
+    name: Push migrations lên ${{ inputs.environment }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: ${{ inputs.environment }}
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_DB_PASSWORD:  ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project
+        run: supabase link --project-ref ${{ secrets.SUPABASE_PROJECT_REF }}
+
+      - name: Dry run
+        run: supabase db push --dry-run
+
+      - name: Apply migrations
+        if: ${{ inputs.dry_run == false }}
+        run: supabase db push
