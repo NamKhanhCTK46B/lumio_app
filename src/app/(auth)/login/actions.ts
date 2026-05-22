@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 
 /**
@@ -32,4 +33,51 @@ export async function dangNhapOAuthAction(provider: "google" | "facebook") {
   }
 
   return { ok: false as const, error: "Không nhận được URL redirect từ provider." };
+}
+
+/**
+ * Schema cho form đăng nhập email/password. Min length là yêu cầu UX,
+ * không phải security — password thật yếu được Supabase Auth từ chối ở
+ * signUp; ở signIn thì cứ thử, Supabase trả lỗi nếu sai.
+ */
+const DangNhapEmailSchema = z.object({
+  email: z.string().trim().toLowerCase().email("Email không hợp lệ"),
+  password: z.string().min(1, "Mật khẩu không được trống"),
+});
+
+/**
+ * Đăng nhập email/password qua Supabase Auth (GoTrue).
+ * Supabase tự verify bcrypt hash + set session cookie qua @supabase/ssr.
+ *
+ * Sau khi login:
+ *  - hoan_tat_onboard_luc != NULL → /dashboard
+ *  - chưa onboard → /onboarding
+ */
+export async function dangNhapEmailAction(formData: FormData): Promise<void> {
+  const parsed = DangNhapEmailSchema.safeParse({
+    email: formData.get("email"),
+    password: formData.get("password"),
+  });
+
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? "Dữ liệu không hợp lệ";
+    redirect(`/login?error=${encodeURIComponent(firstError)}`);
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithPassword({
+    email: parsed.data.email,
+    password: parsed.data.password,
+  });
+
+  if (error) {
+    redirect(`/login?error=${encodeURIComponent("Email hoặc mật khẩu không đúng")}`);
+  }
+
+  const { data: hoSo } = await supabase
+    .from("ho_so")
+    .select("hoan_tat_onboard_luc")
+    .maybeSingle();
+
+  redirect(hoSo?.hoan_tat_onboard_luc ? "/dashboard" : "/onboarding");
 }

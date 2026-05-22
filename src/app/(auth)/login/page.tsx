@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OAuthButtons } from "./_components/oauth-buttons";
+import { EmailPasswordForm } from "./_components/email-password-form";
 
 /**
  * Trang đăng nhập. Mặc định là Server Component — kiểm tra session sẵn có,
@@ -42,6 +43,14 @@ export default async function LoginPage({ searchParams }: Props) {
         ) : null}
 
         <OAuthButtons />
+
+        <div className="flex items-center gap-3">
+          <span className="h-px flex-1 bg-slate-200" />
+          <span className="text-xs uppercase tracking-wide text-slate-400">Hoặc</span>
+          <span className="h-px flex-1 bg-slate-200" />
+        </div>
+
+        <EmailPasswordForm />
 
         <p className="text-center text-xs text-slate-500">
           Bằng việc đăng nhập, bạn đồng ý với Điều khoản dịch vụ và Chính sách quyền riêng tư của Lumio.
