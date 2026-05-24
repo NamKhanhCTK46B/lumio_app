@@ -2,8 +2,8 @@
 
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
-import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { DangNhapEmailSchema } from "@/lib/schemas/auth";
 
 /**
  * Bắt đầu OAuth flow với provider (Google hoặc Facebook).
@@ -34,16 +34,6 @@ export async function dangNhapOAuthAction(provider: "google" | "facebook") {
 
   return { ok: false as const, error: "Không nhận được URL redirect từ provider." };
 }
-
-/**
- * Schema cho form đăng nhập email/password. Min length là yêu cầu UX,
- * không phải security — password thật yếu được Supabase Auth từ chối ở
- * signUp; ở signIn thì cứ thử, Supabase trả lỗi nếu sai.
- */
-const DangNhapEmailSchema = z.object({
-  email: z.string().trim().toLowerCase().email("Email không hợp lệ"),
-  password: z.string().min(1, "Mật khẩu không được trống"),
-});
 
 /**
  * Đăng nhập email/password qua Supabase Auth (GoTrue).
