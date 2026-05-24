@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { OAuthButtons } from "./_components/oauth-buttons";
@@ -10,7 +11,7 @@ import { EmailPasswordForm } from "./_components/email-password-form";
  * Hỗ trợ ?error=... từ /auth/callback để hiển thị message lỗi rõ ràng.
  */
 type Props = {
-  searchParams: Promise<{ error?: string; next?: string }>;
+  searchParams: Promise<{ error?: string; info?: string; next?: string }>;
 };
 
 export default async function LoginPage({ searchParams }: Props) {
@@ -21,7 +22,7 @@ export default async function LoginPage({ searchParams }: Props) {
     redirect("/dashboard");
   }
 
-  const { error } = await searchParams;
+  const { error, info } = await searchParams;
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
@@ -42,6 +43,15 @@ export default async function LoginPage({ searchParams }: Props) {
           </div>
         ) : null}
 
+        {info ? (
+          <div
+            role="status"
+            className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+          >
+            {decodeURIComponent(info)}
+          </div>
+        ) : null}
+
         <OAuthButtons />
 
         <div className="flex items-center gap-3">
@@ -51,6 +61,15 @@ export default async function LoginPage({ searchParams }: Props) {
         </div>
 
         <EmailPasswordForm />
+
+        <div className="flex items-center justify-between text-sm">
+          <Link href="/forgot-password" className="text-amber-600 hover:underline">
+            Quên mật khẩu?
+          </Link>
+          <Link href="/signup" className="text-amber-600 hover:underline">
+            Tạo tài khoản
+          </Link>
+        </div>
 
         <p className="text-center text-xs text-slate-500">
           Bằng việc đăng nhập, bạn đồng ý với Điều khoản dịch vụ và Chính sách quyền riêng tư của Lumio.
