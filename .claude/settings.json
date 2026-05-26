@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --base main --title 'feat: bootstrap Supabase \\(schema v2 + seed + OAuth + CI/CD\\)' --body ' *)",
+      "PowerShell(Get-Command gh -ErrorAction SilentlyContinue)",
+      "PowerShell($env:Path -split ';' | Where-Object { $_ -match 'GitHub|gh' }; \\(Get-ChildItem -Path \"$env:LOCALAPPDATA\\\\Programs\\\\GitHub CLI\" -ErrorAction SilentlyContinue\\).Name; Test-Path \"$env:ProgramFiles\\\\GitHub CLI\\\\gh.exe\")",
+      "Bash(git -C \"d:\\\\university\\\\cong-nghe-moi-phat-trien-pm\\\\bai-ca-nhan\\\\lumio-app\" branch -v)"
+    ]
+  }
+}

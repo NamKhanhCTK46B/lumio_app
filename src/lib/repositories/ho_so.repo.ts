@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { CapNhatHoSoInput } from "@/lib/schemas/ho_so";
 
@@ -34,15 +35,21 @@ export type HoSoFull = {
 export const hoSoRepo = {
   /**
    * Đọc hồ sơ user hiện tại. Trả null nếu chưa login (RLS filter rỗng).
+   *
+   * Wrap `React.cache()` để dedupe trong cùng 1 request: layout + page
+   * (vd. dashboard) đều gọi → query Supabase chỉ chạy 1 lần. Cache scope
+   * = render request hiện tại; lần render sau (request mới) sẽ refetch.
+   * Key cache là identity của `supabase` argument — `createClient()` từ
+   * `@/lib/supabase/server` reuse cùng instance trong request nên hit.
    */
-  async layHoSoHienTai(supabase: SupabaseClient) {
+  layHoSoHienTai: cache(async (supabase: SupabaseClient) => {
     const { data, error } = await supabase
       .from("ho_so")
       .select("id, email, ten_hien_thi, url_avatar, so_dien_thoai, trinh_do_cefr, ngon_ngu_giao_dien, chu_de_giao_dien, phut_moi_ngay, mui_gio, hoan_tat_onboard_luc")
       .maybeSingle<HoSoFull>();
     if (error) throw error;
     return data;
-  },
+  }),
 
   /**
    * Cập nhật hồ sơ user. RLS từ chối nếu auth.uid() khác `userId`.

@@ -1,32 +1,42 @@
-import { hoanTatOnboardAction } from "./actions";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import type { HoSo } from "@/types/supabase";
 
 /**
- * Onboarding placeholder. UC1 thật sẽ có:
- *  - Khảo sát mục tiêu (chọn loai_muc_tieu + diem_muc_tieu)
- *  - Placement test 10 câu sinh CEFR
- *  - Lưu vào muc_tieu_nd + bai_kiem_tra_trinh_do
+ * Hub onboarding — không render UI, chỉ route user đến bước phù hợp:
+ *  1. Chưa làm placement test → /onboarding/test
+ *  2. Đã làm test, chưa đặt mục tiêu → /onboarding/goals
+ *  3. Đã đặt mục tiêu, chưa hoàn tất → /onboarding/preferences
+ *  4. Đã hoàn tất → /dashboard (proxy bình thường cho phép vào)
  *
- * Hiện tại chỉ có 1 button "Hoàn tất" set timestamp để cho phép user vào app.
+ * Cách này cho phép user reload `/onboarding` mà luôn tới bước hợp lý.
  */
-export default function OnboardingPage() {
-  return (
-    <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Chào mừng tới Lumio!</h1>
-        <p className="mt-2 text-sm text-slate-600">
-          Đây là bước thiết lập ban đầu. Phiên bản đầy đủ sẽ có khảo sát mục tiêu
-          và bài đánh giá trình độ. Tạm thời, bạn có thể vào ngay để khám phá.
-        </p>
-      </header>
+export default async function OnboardingHubPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) redirect("/login");
 
-      <form action={hoanTatOnboardAction}>
-        <button
-          type="submit"
-          className="rounded-md bg-amber-500 px-6 py-2 text-sm font-medium text-white transition hover:bg-amber-600"
-        >
-          Vào ứng dụng
-        </button>
-      </form>
-    </div>
-  );
+  const { data: hoSo } = await supabase
+    .from("ho_so")
+    .select("hoan_tat_onboard_luc, trinh_do_cefr")
+    .maybeSingle() as { data: HoSo | null; error: unknown };
+
+  if (hoSo?.hoan_tat_onboard_luc) {
+    redirect("/dashboard");
+  }
+
+  // trinh_do_cefr được set khi placement test hoàn tất (UC5 action).
+  if (!hoSo?.trinh_do_cefr) {
+    redirect("/onboarding/test");
+  }
+
+  const { count } = await supabase
+    .from("muc_tieu_nd")
+    .select("id", { count: "exact", head: true });
+
+  if (!count || count === 0) {
+    redirect("/onboarding/goals");
+  }
+
+  redirect("/onboarding/preferences");
 }
