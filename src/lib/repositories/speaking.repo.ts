@@ -92,12 +92,14 @@ export const speakingRepo = {
    */
   async taoPhienNoi(
     supabase: SupabaseClient,
+    nguoiDungId: string,
     nhanVatId: string,
     boiCanh: string | null = null,
   ): Promise<PhienNoiRow> {
     const { data, error } = await supabase
       .from("phien_noi")
       .insert({
+        nguoi_dung_id: nguoiDungId,
         nhan_vat_id: nhanVatId,
         boi_canh: boiCanh,
         bat_dau_luc: new Date().toISOString(),

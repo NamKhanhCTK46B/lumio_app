@@ -1,91 +1,113 @@
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { llm } from "@/lib/ai/provider";
+import { llmStream } from "@/lib/ai/provider";
 import { roleplaySystemPrompt, roleplayUserPrompt } from "@/lib/ai/prompts/speaking";
+import { speakingRepo } from "@/lib/repositories/speaking.repo";
 
-export const runtime = "edge";
+export const runtime = "nodejs";
+
+const RoleplaySchema = z.object({
+  type: z.literal("roleplay"),
+  sessionId: z.string().uuid(),
+  userTranscript: z.string().trim().min(1).max(2000),
+});
 
 /**
- * POST /api/ai/stream
- *
- * Stream LLM response cho:
- * - roleplay: hội thoại AI roleplay
- *
- * Request body:
- * {
- *   type: "roleplay",
- *   sessionId: string,
- *   characterPrompt: string,
- *   characterName: string,
- *   history: Array<{ vai, noi_dung }>,
- *   userTranscript: string,
- * }
+ * Stream LLM response cho roleplay và lưu lượt nói vào DB.
  */
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { type } = body;
-
-    if (type === "roleplay") {
-      return handleRoleplay(body);
+    const parsed = RoleplaySchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: "Dữ liệu không hợp lệ" }, { status: 400 });
     }
 
-    return NextResponse.json({ error: "Unknown type" }, { status: 400 });
+    return handleRoleplay(parsed.data);
   } catch (err) {
     console.error("[ai/stream] Error:", err);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
-async function handleRoleplay(body: {
-  sessionId: string;
-  characterPrompt: string;
-  characterName: string;
-  history: Array<{ vai: string; noi_dung: string }>;
-  userTranscript: string;
-}) {
-  const { characterPrompt, characterName, history, userTranscript } = body;
+async function handleRoleplay(input: z.infer<typeof RoleplaySchema>) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
-  const systemPrompt = roleplaySystemPrompt({
-    characterName,
-    characterPrompt,
-    cefrToiThieu: null,
-  });
-
-  // Build messages
-  const messages: Array<{ role: "user" | "model"; text: string }> = [];
-
-  // Add history
-  for (const turn of history) {
-    messages.push({
-      role: turn.vai === "nguoi_dung" ? "user" : "model",
-      text: turn.noi_dung,
-    });
+  if (!user) {
+    return NextResponse.json({ error: "Chưa đăng nhập" }, { status: 401 });
   }
 
-  // Add current user turn
-  messages.push({ role: "user", text: roleplayUserPrompt(userTranscript) });
+  const phien = await speakingRepo.layPhienNoi(supabase, input.sessionId);
+  if (!phien || phien.nguoi_dung_id !== user.id) {
+    return NextResponse.json({ error: "Phiên không hợp lệ" }, { status: 403 });
+  }
+
+  const nhanVat = await speakingRepo.layNhanVat(supabase, phien.nhan_vat_id);
+  if (!nhanVat) {
+    return NextResponse.json({ error: "Nhân vật không tồn tại" }, { status: 404 });
+  }
+
+  const history = await speakingRepo.layLichSuPhien(supabase, input.sessionId);
+  const historyText = history
+    .map((turn) => `[${turn.vai === "nguoi_dung" ? "User" : "Assistant"}]: ${turn.noi_dung}`)
+    .join("\n");
+
+  await speakingRepo.themLuotNoi(
+    supabase,
+    input.sessionId,
+    "nguoi_dung",
+    input.userTranscript,
+  );
 
   try {
-    // Convert to OpenAI-compatible format for llm()
-    const stream = await llm({
-      he_thong: systemPrompt,
-      nguoi_dung: messages.map((m) => `[${m.role === "user" ? "User" : "Assistant"}]: ${m.text}`).join("\n"),
+    const stream = await llmStream({
+      he_thong: roleplaySystemPrompt({
+        characterName: nhanVat.ten,
+        characterPrompt: nhanVat.prompt_nhan_vat,
+        cefrToiThieu: nhanVat.cefr_toi_thieu,
+      }),
+      nguoi_dung: `${historyText}\n\n${roleplayUserPrompt(input.userTranscript)}`,
     });
 
-    // Since llm() doesn't stream natively, we'll implement a chunked response
-    // For production, use the streaming API properly with the provider
-    const text = typeof stream === "string" ? stream : (stream as { text?: string }).text ?? "";
+    const { stream: responseStream, fullText } = teeTextStream(stream);
+    void fullText
+      .then((text) => speakingRepo.themLuotNoi(supabase, input.sessionId, "ai", text))
+      .catch((err) => console.error("[ai/stream] Save AI turn error:", err));
 
-    return new NextResponse(text, {
+    return new Response(responseStream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
-        "Connection": "keep-alive",
+        "X-Content-Type-Options": "nosniff",
       },
     });
   } catch (err) {
     console.error("[ai/stream] LLM error:", err);
     return NextResponse.json({ error: "LLM error" }, { status: 502 });
   }
+}
+
+function teeTextStream(source: ReadableStream<Uint8Array>) {
+  const [clientStream, saveStream] = source.tee();
+  const fullText = streamToString(saveStream);
+  return { stream: clientStream, fullText };
+}
+
+async function streamToString(stream: ReadableStream<Uint8Array>): Promise<string> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let result = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    result += decoder.decode(value, { stream: true });
+  }
+
+  result += decoder.decode();
+  return result;
 }

@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { taoPhienNoiAction, ketThucPhienNoiAction, layChiTietPhienAction } from "../actions";
+import { taoPhienNoiAction, ketThucPhienNoiAction } from "../actions";
 import { taoSttController, laCoHoTroStt, type SttResult } from "@/lib/speech/stt";
 import { taoTtsController, laCoHoTroTts } from "@/lib/speech/tts";
 import { Button } from "@/components/ui/button";
@@ -14,7 +14,6 @@ import { ArrowLeftIcon, MicIcon, MicOffIcon, SendIcon, Volume2Icon, XIcon } from
 type Turn = {
   vai: "nguoi_dung" | "ai";
   noi_dung: string;
-  sua_loi?: unknown;
 };
 
 const SCENARIOS = [
@@ -30,19 +29,22 @@ export function SpeakingSessionClient({
   nhanVatId,
   nhanVatTen,
   nhanVatAvatar,
-  nhanVatPrompt,
   phienId,
+  initialTurns,
+  initialScenario,
 }: {
   nhanVatId: string;
   nhanVatTen: string;
   nhanVatAvatar: string | null;
-  nhanVatPrompt: string;
   phienId?: string;
+  initialTurns?: Turn[];
+  initialScenario?: string;
 }) {
+  const hasExistingSession = !!phienId;
   const [sessionId, setSessionId] = useState(phienId ?? "");
-  const [scenario, setScenario] = useState<string>("");
-  const [started, setStarted] = useState(false);
-  const [turns, setTurns] = useState<Turn[]>([]);
+  const [scenario, setScenario] = useState(initialScenario ?? "");
+  const [started, setStarted] = useState(hasExistingSession);
+  const [turns, setTurns] = useState<Turn[]>(initialTurns ?? []);
   const [inputText, setInputText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingText, setRecordingText] = useState("");
@@ -52,6 +54,7 @@ export function SpeakingSessionClient({
   const sttRef = useRef<ReturnType<typeof taoSttController> | null>(null);
   const ttsRef = useRef<ReturnType<typeof taoTtsController> | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const sendingRef = useRef(false);
   const router = useRouter();
 
   // Scroll to bottom on new messages
@@ -69,9 +72,13 @@ export function SpeakingSessionClient({
     };
   }, [ttsSupported]);
 
-  // Start session
   async function startSession() {
-    if (!scenario) return;
+    if (!scenario && !hasExistingSession) return;
+    if (hasExistingSession) {
+      setStarted(true);
+      return;
+    }
+
     setIsLoading(true);
     const result = await taoPhienNoiAction({
       nhan_vat_id: nhanVatId,
@@ -82,41 +89,34 @@ export function SpeakingSessionClient({
     if (result.ok) {
       setSessionId(result.data!.phien_id);
       setStarted(true);
-      // AI greeting
       const greeting = getGreeting(nhanVatTen, scenario);
       setTurns([{ vai: "ai", noi_dung: greeting }]);
-      // TTS
       if (ttsRef.current) {
         ttsRef.current.speak(greeting).catch(() => {});
       }
     }
   }
 
-  // End session
   async function endSession() {
     if (!sessionId) return;
-    const scores = turns
-      .filter((t) => t.vai === "ai")
-      .map((t) => t.noi_dung.length);
-    const avgScore = scores.length > 0
-      ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length / 10)
-      : null;
 
     await ketThucPhienNoiAction(sessionId, {
       tongLuot: turns.length,
-      diemPhatAmTb: avgScore,
+      diemPhatAmTb: null,
       tomTat: `Phiên ${nhanVatTen} - ${scenario}`,
     });
 
     router.push("/speak");
   }
 
-  // Send text message
   async function sendMessage(text: string) {
-    if (!text.trim() || !sessionId) return;
+    if (!text.trim() || !sessionId || sendingRef.current) return;
+    sendingRef.current = true;
 
     const userTurn: Turn = { vai: "nguoi_dung", noi_dung: text };
-    setTurns((prev) => [...prev, userTurn]);
+    const aiTurn: Turn = { vai: "ai", noi_dung: "" };
+
+    setTurns((prev) => [...prev, userTurn, aiTurn]);
     setInputText("");
     setRecordingText("");
     setIsLoading(true);
@@ -128,23 +128,21 @@ export function SpeakingSessionClient({
         body: JSON.stringify({
           type: "roleplay",
           sessionId,
-          characterPrompt: nhanVatPrompt,
-          characterName: nhanVatTen,
-          history: turns.map((t) => ({ vai: t.vai, noi_dung: t.noi_dung })),
           userTranscript: text,
         }),
       });
 
-      if (!response.ok) throw new Error("Stream error");
+      if (!response.ok) {
+        throw new Error(`Stream error: ${response.status}`);
+      }
 
       const reader = response.body?.getReader();
+      if (!reader) throw new Error("No response body");
+
       const decoder = new TextDecoder();
       let aiText = "";
 
-      const aiTurn: Turn = { vai: "ai", noi_dung: "" };
-      setTurns((prev) => [...prev, aiTurn]);
-
-      while (reader) {
+      while (true) {
         const { done, value } = await reader.read();
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
@@ -158,19 +156,24 @@ export function SpeakingSessionClient({
         });
       }
 
-      // TTS
       if (ttsRef.current) {
         ttsRef.current.speak(aiText).catch(() => {});
       }
-    } catch {
-      // Remove failed AI turn
-      setTurns((prev) => prev.filter((t) => t !== turns[turns.length]));
+    } catch (err) {
+      console.error("Send message error:", err);
+      setTurns((prev) => {
+        const last = prev[prev.length - 1];
+        if (last?.vai === "ai" && last.noi_dung === "") {
+          return prev.slice(0, -1);
+        }
+        return prev;
+      });
     } finally {
+      sendingRef.current = false;
       setIsLoading(false);
     }
   }
 
-  // STT
   function startRecording() {
     if (!sttSupported) return;
 
@@ -178,12 +181,11 @@ export function SpeakingSessionClient({
     sttRef.current = taoSttController({
       onResult: (result: SttResult) => {
         setRecordingText(result.transcript);
-        if (result.isFinal) {
+        if (result.isFinal && !sendingRef.current) {
           sendMessage(result.transcript);
         }
       },
-      onError: (err) => {
-        console.error("STT error:", err);
+      onError: () => {
         setIsRecording(false);
       },
       onEnd: () => {
@@ -231,29 +233,31 @@ export function SpeakingSessionClient({
           <Card className="max-w-md w-full">
             <CardContent className="pt-6 space-y-4">
               <p className="text-center text-sm text-muted-foreground">
-                Chọn tình huống để bắt đầu:
+                {hasExistingSession ? "Tiếp tục phiên cũ" : "Chọn tình huống để bắt đầu:"}
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                {SCENARIOS.map((s) => (
-                  <button
-                    key={s}
-                    onClick={() => setScenario(s)}
-                    className={`rounded-lg border px-3 py-2 text-sm text-left transition-all ${
-                      scenario === s
-                        ? "border-primary bg-lm-primary-soft text-primary"
-                        : "border-border hover:border-primary/50"
-                    }`}
-                  >
-                    {s}
-                  </button>
-                ))}
-              </div>
+              {!hasExistingSession && (
+                <div className="grid grid-cols-2 gap-2">
+                  {SCENARIOS.map((s) => (
+                    <button
+                      key={s}
+                      onClick={() => setScenario(s)}
+                      className={`rounded-lg border px-3 py-2 text-sm text-left transition-all ${
+                        scenario === s
+                          ? "border-primary bg-lm-primary-soft text-primary"
+                          : "border-border hover:border-primary/50"
+                      }`}
+                    >
+                      {s}
+                    </button>
+                  ))}
+                </div>
+              )}
               <Button
                 className="w-full"
-                disabled={!scenario || isLoading}
+                disabled={(!scenario && !hasExistingSession) || isLoading}
                 onClick={startSession}
               >
-                {isLoading ? "Đang bắt đầu..." : "Bắt đầu luyện nói"}
+                {isLoading ? "Đang bắt đầu..." : hasExistingSession ? "Tiếp tục" : "Bắt đầu luyện nói"}
               </Button>
             </CardContent>
           </Card>
@@ -283,7 +287,7 @@ export function SpeakingSessionClient({
                   }`}
                 >
                   <p>{turn.noi_dung}</p>
-                  {turn.vai === "ai" && ttsSupported && (
+                  {turn.vai === "ai" && turn.noi_dung && ttsSupported && (
                     <button
                       onClick={() => ttsRef.current?.speak(turn.noi_dung)}
                       className="mt-1 flex items-center gap-1 text-xs opacity-70 hover:opacity-100"

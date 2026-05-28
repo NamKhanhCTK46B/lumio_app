@@ -21,8 +21,16 @@ export async function taoPhienNoiAction(raw: unknown) {
 
   try {
     const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      return { ok: false as const, error: "Chưa đăng nhập" };
+    }
+
     const phien = await speakingRepo.taoPhienNoi(
       supabase,
+      user.id,
       parsed.data.nhan_vat_id,
       parsed.data.boi_canh ?? null,
     );
