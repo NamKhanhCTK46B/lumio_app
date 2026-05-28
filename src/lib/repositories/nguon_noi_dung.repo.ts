@@ -51,6 +51,7 @@ export const contentRepo = {
   async taoNguon(
     supabase: SupabaseClient,
     input: {
+      nguoi_dung_id: string;
       loai: NguonNoiDungRow["loai"];
       url: string;
       ma_bam_url: string;

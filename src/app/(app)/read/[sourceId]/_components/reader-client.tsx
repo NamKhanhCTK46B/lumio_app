@@ -24,7 +24,10 @@ export function ReaderClient({
   const [savingWord, setSavingWord] = useState(false);
   const [savedWords, setSavedWords] = useState<Set<string>>(new Set());
 
-  function onWordClick(word: string, context: string) {
+  function onWordClick(rawWord: string, context: string) {
+    const word = normalizeWord(rawWord);
+    if (!word) return;
+
     setSelectedWord({ word, context });
   }
 
@@ -44,9 +47,10 @@ export function ReaderClient({
       setSavedWords((prev) => new Set([...prev, selectedWord.word.toLowerCase()]));
       setSelectedWord(null);
       toast.success(`Đã lưu "${selectedWord.word}"`);
-    } else {
-      toast.error(result.error ?? "Lỗi khi lưu từ");
+      return;
     }
+
+    toast.error(result.error?.includes("duplicate") ? "Từ này đã có trong kho từ của bạn" : result.error ?? "Lỗi khi lưu từ");
   }
 
   // Split content into paragraphs
@@ -66,7 +70,7 @@ export function ReaderClient({
         {paragraphs.map((para, i) => (
           <p key={i}>
             {para.split(/(\s+)/).map((segment, j) => {
-              const word = segment.trim();
+              const word = normalizeWord(segment);
               if (!word) return <span key={j}>{segment}</span>;
 
               const isSaved = savedWords.has(word.toLowerCase());
@@ -149,4 +153,11 @@ export function ReaderClient({
       )}
     </div>
   );
+}
+
+function normalizeWord(word: string) {
+  return word
+    .trim()
+    .replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "")
+    .toLowerCase();
 }

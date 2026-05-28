@@ -50,7 +50,10 @@ export default async function ReaderPage({
       </div>
 
       {/* Content */}
-      <ReaderClient sourceId={sourceId} content={nguon.ban_ghi_loi ?? ""} />
+      <ReaderClient
+        sourceId={sourceId}
+        content={doans.length > 0 ? doans.map((doan) => doan.noi_dung).join("\n\n") : nguon.ban_ghi_loi ?? ""}
+      />
     </div>
   );
 }
