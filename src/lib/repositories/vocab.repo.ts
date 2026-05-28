@@ -269,6 +269,44 @@ export const vocabRepo = {
     if (error) throw error;
   },
 
+  /**
+   * Lấy từ theo nguồn (từ một bài YouTube/article đã import).
+   */
+  async layTuTheoNguon(
+    supabase: SupabaseClient,
+    nguoiDungId: string,
+    nguonId: string,
+  ): Promise<TuDaLuuRow[]> {
+    const { data, error } = await supabase
+      .from("tu_da_luu")
+      .select("*")
+      .eq("nguoi_dung_id", nguoiDungId)
+      .eq("nguon_id", nguonId)
+      .order("tao_luc", { ascending: false });
+
+    if (error) throw error;
+    return data as TuDaLuuRow[];
+  },
+
+  /**
+   * Lấy từ gần đây nhất (để sinh quiz khi không chỉ định nguồn).
+   */
+  async layTuGanNhat(
+    supabase: SupabaseClient,
+    nguoiDungId: string,
+    limit = 20,
+  ): Promise<TuDaLuuRow[]> {
+    const { data, error } = await supabase
+      .from("tu_da_luu")
+      .select("*")
+      .eq("nguoi_dung_id", nguoiDungId)
+      .order("tao_luc", { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+    return data as TuDaLuuRow[];
+  },
+
   // ---------------------------------------------------------------------------
   // Ôn từ (SRS)
   // ---------------------------------------------------------------------------

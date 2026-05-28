@@ -1,62 +1,40 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { sinhQuizAction, type QuizQuestion } from "./actions";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CheckIcon, XIcon, RefreshCwIcon } from "lucide-react";
-
-type QuizQuestion = {
-  id: number;
-  question: string;
-  options: string[];
-  correctIndex: number;
-  explanation?: string;
-};
-
-const SAMPLE_QUIZZES: Record<string, QuizQuestion[]> = {
-  grammar: [
-    {
-      id: 1,
-      question: "Choose the correct sentence:",
-      options: [
-        "She don't like coffee.",
-        "She doesn't like coffee.",
-        "She not like coffee.",
-        "She no like coffee.",
-      ],
-      correctIndex: 1,
-      explanation: "'Doesn't' là dạng phủ định đúng cho ngôi thứ 3 số ít (she/he/it).",
-    },
-    {
-      id: 2,
-      question: "Fill in the blank: 'I have been learning English ___ three years.'",
-      options: ["since", "for", "during", "in"],
-      correctIndex: 1,
-      explanation: "'For' dùng với khoảng thời gian (three years). 'Since' dùng với thời điểm bắt đầu (2019, Monday).",
-    },
-  ],
-  vocab: [
-    {
-      id: 1,
-      question: "What does 'ubiquitous' mean?",
-      options: ["Rare", "Found everywhere", "Expensive", "Dangerous"],
-      correctIndex: 1,
-      explanation: "'Ubiquitous' = có mặt ở khắp nơi, rất phổ biến. Từ gốc Latin 'ubique' = everywhere.",
-    },
-  ],
-};
+import { CheckIcon, XIcon, RefreshCwIcon, LoaderIcon } from "lucide-react";
 
 export default function QuizPage() {
   const [category, setCategory] = useState<"grammar" | "vocab" | null>(null);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQ, setCurrentQ] = useState(0);
   const [selected, setSelected] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [finished, setFinished] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const questions = category ? SAMPLE_QUIZZES[category] ?? [] : [];
   const q = questions[currentQ];
   const total = questions.length;
+
+  async function startQuiz(loai: "grammar" | "vocab") {
+    setCategory(loai);
+    setLoading(true);
+    setError("");
+
+    const result = await sinhQuizAction({ loai, so_cau: 5 });
+
+    setLoading(false);
+    if (!result.ok) {
+      setError(result.error);
+      return;
+    }
+
+    setQuestions(result.data.cau_hoi);
+  }
 
   function selectAnswer(idx: number) {
     if (selected !== null) return;
@@ -77,10 +55,13 @@ export default function QuizPage() {
 
   function reset() {
     setCategory(null);
+    setQuestions([]);
     setCurrentQ(0);
     setSelected(null);
     setScore(0);
     setFinished(false);
+    setLoading(false);
+    setError("");
   }
 
   if (!category) {
@@ -96,17 +77,33 @@ export default function QuizPage() {
         <div className="grid gap-4 sm:grid-cols-2">
           <QuizCategoryCard
             title="Ngữ pháp"
-            desc="20 câu ngữ pháp theo CEFR"
-            count={SAMPLE_QUIZZES.grammar.length}
-            onClick={() => setCategory("grammar")}
+            desc="Quiz ngữ pháp AI sinh từ từ vựng của bạn"
+            onClick={() => startQuiz("grammar")}
           />
           <QuizCategoryCard
             title="Từ vựng"
-            desc="20 câu từ vựng theo chủ đề"
-            count={SAMPLE_QUIZZES.vocab.length}
-            onClick={() => setCategory("vocab")}
+            desc="Quiz từ vựng AI sinh từ từ đã lưu"
+            onClick={() => startQuiz("vocab")}
           />
         </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-lg mx-auto py-16 text-center space-y-4">
+        <LoaderIcon className="h-8 w-8 animate-spin mx-auto text-muted-foreground" />
+        <p className="text-sm text-muted-foreground">Đang sinh câu hỏi bằng AI...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="max-w-lg mx-auto py-16 text-center space-y-4">
+        <p className="text-sm text-destructive">{error}</p>
+        <Button onClick={reset}>Thử lại</Button>
       </div>
     );
   }
@@ -132,9 +129,10 @@ export default function QuizPage() {
     );
   }
 
+  if (!q) return null;
+
   return (
     <div className="max-w-lg mx-auto space-y-6">
-      {/* Progress */}
       <div className="flex items-center justify-between">
         <Button variant="ghost" size="sm" onClick={reset}>
           ← Thoát
@@ -144,7 +142,6 @@ export default function QuizPage() {
         </Badge>
       </div>
 
-      {/* Question */}
       <Card>
         <CardContent className="pt-6 space-y-6">
           <p className="text-base font-medium">{q.question}</p>
@@ -206,12 +203,10 @@ export default function QuizPage() {
 function QuizCategoryCard({
   title,
   desc,
-  count,
   onClick,
 }: {
   title: string;
   desc: string;
-  count: number;
   onClick: () => void;
 }) {
   return (
@@ -220,10 +215,7 @@ function QuizCategoryCard({
       onClick={onClick}
     >
       <CardContent className="pt-6 space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="font-semibold">{title}</h3>
-          <Badge variant="secondary">{count} câu</Badge>
-        </div>
+        <h3 className="font-semibold">{title}</h3>
         <p className="text-sm text-muted-foreground">{desc}</p>
       </CardContent>
     </Card>
