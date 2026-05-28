@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { danhGiaRepo } from "@/lib/repositories/danh_gia.repo";
+import { danhGiaRepo, type CauHoiRow } from "@/lib/repositories/danh_gia.repo";
 import { parseCauHoi, SO_CAU_TOI_DA } from "@/lib/ai/placement-grading";
 import { OnboardingSteps } from "../_components/steps";
 import {
@@ -23,7 +23,7 @@ export default async function PlacementTestPage({
   const { error } = await searchParams;
   const supabase = await createClient();
   const bai = await danhGiaRepo.layBaiDangLam(supabase);
-  const danhSach = bai ? await danhGiaRepo.layCauHoi(supabase, bai.id) : [];
+  const danhSach: CauHoiRow[] = bai ? await danhGiaRepo.layCauHoi(supabase, bai.id) : [];
   const cauChuaTraLoi = danhSach.find((c) => c.la_dap_an_dung === null);
   const cauHoi = cauChuaTraLoi ? parseCauHoi(cauChuaTraLoi.cau_hoi) : null;
 

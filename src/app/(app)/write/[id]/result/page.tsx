@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { baiVietRepo } from "@/lib/repositories/bai_viet.repo";
+import { baiVietRepo, type ChuThichRow } from "@/lib/repositories/bai_viet.repo";
 import { EssayFeedback } from "../../_components/essay-feedback";
 
 /**
@@ -23,7 +23,7 @@ export default async function EssayResultPage({
   const bai = await baiVietRepo.layBai(supabase, id);
   if (!bai) notFound();
 
-  const chuThich = await baiVietRepo.layChuThich(supabase, id);
+  const chuThich: ChuThichRow[] = await baiVietRepo.layChuThich(supabase, id);
 
   return (
     <div className="space-y-6">

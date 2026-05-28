@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { baiVietRepo } from "@/lib/repositories/bai_viet.repo";
+import { baiVietRepo, type BaiVietRow, type DeBaiRow } from "@/lib/repositories/bai_viet.repo";
 import { taoNhapAction } from "./actions";
 
 /**
@@ -24,7 +24,7 @@ export default async function WriteIndexPage({
 }) {
   const { error } = await searchParams;
   const supabase = await createClient();
-  const [danhSachDe, ganDay] = await Promise.all([
+  const [danhSachDe, ganDay]: [DeBaiRow[], BaiVietRow[]] = await Promise.all([
     baiVietRepo.layDanhSachDe(supabase),
     baiVietRepo.layGanDay(supabase, 5),
   ]);

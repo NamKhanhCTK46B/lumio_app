@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { mucTieuRepo } from "@/lib/repositories/muc_tieu.repo";
+import { mucTieuRepo, type MucTieuRow } from "@/lib/repositories/muc_tieu.repo";
 import { LOAI_MUC_TIEU_VALUES, NHAN_MUC_TIEU } from "@/lib/schemas/muc_tieu";
 import { luuMucTieuAction } from "./actions";
 import { OnboardingSteps } from "../_components/steps";
@@ -16,7 +16,7 @@ export default async function OnboardingGoalsPage({
 }) {
   const { error } = await searchParams;
   const supabase = await createClient();
-  const danhSach = await mucTieuRepo.layDanhSach(supabase);
+  const danhSach: MucTieuRow[] = await mucTieuRepo.layDanhSach(supabase);
   const daChon = new Set(danhSach.map((m) => m.muc_tieu));
   const mucChinh = danhSach.find((m) => m.la_muc_tieu_chinh);
 

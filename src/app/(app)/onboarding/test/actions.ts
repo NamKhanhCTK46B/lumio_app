@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { danhGiaRepo } from "@/lib/repositories/danh_gia.repo";
+import { danhGiaRepo, type CauHoiRow } from "@/lib/repositories/danh_gia.repo";
 import { sinhCauHoiPlacement } from "@/lib/ai/prompts/placement-test";
 import {
   LEVEL_BAT_DAU,
@@ -73,7 +73,7 @@ export async function traLoiCauHoiAction(formData: FormData): Promise<void> {
     redirect("/onboarding/test");
   }
 
-  const danhSach = await danhGiaRepo.layCauHoi(supabase, bai.id);
+  const danhSach: CauHoiRow[] = await danhGiaRepo.layCauHoi(supabase, bai.id);
   const cauHienTai = danhSach.find((c) => c.id === cauHoiId);
   if (!cauHienTai) {
     redirect("/onboarding/test");

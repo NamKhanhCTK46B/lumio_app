@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
-import { baiVietRepo } from "@/lib/repositories/bai_viet.repo";
+import { baiVietRepo, type BaiVietRow } from "@/lib/repositories/bai_viet.repo";
 import { LineChart, BarChart } from "../_components/charts";
 
 /**
@@ -17,7 +17,7 @@ import { LineChart, BarChart } from "../_components/charts";
 
 export default async function WriteProgressPage() {
   const supabase = await createClient();
-  const danh_sach = await baiVietRepo.layLichSuChamDiem(supabase, 30);
+  const danh_sach: BaiVietRow[] = await baiVietRepo.layLichSuChamDiem(supabase, 30);
 
   if (danh_sach.length === 0) {
     return (
