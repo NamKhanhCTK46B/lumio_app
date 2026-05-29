@@ -10,6 +10,7 @@ import {
   laThemeHopLe,
 } from "@/i18n/config";
 import { Header } from "./_components/header";
+import { Sidebar } from "./_components/sidebar";
 
 /**
  * Layout chung cho route group (app). Check session, fetch ho_so + đọc
@@ -48,15 +49,20 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   );
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      <Header
-        email={user.email ?? ""}
-        ten_hien_thi={hoSo?.ten_hien_thi ?? null}
-        url_avatar={hoSo?.url_avatar ?? null}
-        current_theme={current_theme}
-        current_locale={current_locale}
-      />
-      <main className="mx-auto max-w-5xl px-6 py-8">{children}</main>
+    <div className="flex min-h-screen bg-lm-bg text-lm-fg">
+      <Sidebar />
+      <div className="flex min-h-screen flex-1 flex-col">
+        <Header
+          email={user.email ?? ""}
+          ten_hien_thi={hoSo?.ten_hien_thi ?? null}
+          url_avatar={hoSo?.url_avatar ?? null}
+          current_theme={current_theme}
+          current_locale={current_locale}
+        />
+        <main className="flex-1 overflow-y-auto px-4 py-6 pb-24 sm:px-6 lg:px-7 lg:py-7 md:pb-10">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

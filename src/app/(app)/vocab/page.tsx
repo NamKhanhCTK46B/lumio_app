@@ -4,7 +4,7 @@ import { vocabRepo } from "@/lib/repositories/vocab.repo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { PlusIcon, BookOpenIcon } from "lucide-react";
+import { BookOpenIcon } from "lucide-react";
 import { TaoBoTuDialog } from "./_components/tao-bo-tu-dialog";
 
 /**
@@ -13,44 +13,73 @@ import { TaoBoTuDialog } from "./_components/tao-bo-tu-dialog";
  */
 export default async function VocabPage() {
   const supabase = await createClient();
-  const [boTuList, thongKe] = await Promise.all([
+  const [boTuList, thongKe, tuCanOn] = await Promise.all([
     vocabRepo.danhSachBoTu(supabase),
     vocabRepo.thongKe(supabase),
+    vocabRepo.demTuCanOn(supabase),
   ]);
 
   const userDecks = boTuList.filter((d) => !d.la_he_thong);
   const systemDecks = boTuList.filter((d) => d.la_he_thong);
 
   return (
-    <div className="space-y-8">
-      {/* Header + Stats */}
-      <div className="flex items-start justify-between gap-4">
+    <div className="mx-auto flex max-w-6xl flex-col gap-6">
+      {/* Header + hero */}
+      <div className="flex flex-col gap-4">
         <div>
           <h1 className="lm-h2">Từ vựng</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm text-lm-fg-muted">
             Học và ôn từ vựng với spaced repetition
           </p>
         </div>
-        <Link href="/vocab/review">
-          <Button variant="default" size="sm" className="gap-2">
-            <BookOpenIcon className="h-4 w-4" />
-            Ôn hôm nay
-          </Button>
-        </Link>
+
+        <Card className="border-transparent bg-lm-primary-soft">
+          <CardContent className="flex flex-col gap-4 py-6 sm:flex-row sm:items-center">
+            <span className="text-5xl font-mono font-semibold text-lm-primary-press">
+              {tuCanOn}
+            </span>
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold text-lm-primary-ink">
+                Từ cần ôn hôm nay
+              </h3>
+              <p className="mt-1 text-sm text-lm-primary-ink/80">
+                Chỉ tốn ~3 phút để giữ chuỗi học đều mỗi ngày.
+              </p>
+            </div>
+            <Link href="/vocab/review">
+              <Button size="lg" className="gap-2">
+                <BookOpenIcon className="h-4 w-4" />
+                Ôn ngay
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Stats bar */}
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatCard label="Tổng" value={thongKe.tong} color="bg-lm-primary-soft" />
+        <StatCard
+          label="Tổng"
+          value={thongKe.tong}
+          color="bg-lm-primary-soft"
+        />
         <StatCard label="Mới" value={thongKe.moi} color="bg-lm-info-soft" />
-        <StatCard label="Đang học" value={thongKe.dang_hoc} color="bg-lm-warning-soft" />
-        <StatCard label="Đã thuộc" value={thongKe.thuoc} color="bg-lm-success-soft" />
+        <StatCard
+          label="Đang học"
+          value={thongKe.dang_hoc}
+          color="bg-lm-warning-soft"
+        />
+        <StatCard
+          label="Đã thuộc"
+          value={thongKe.thuoc}
+          color="bg-lm-success-soft"
+        />
       </div>
 
       {/* Deck list */}
       <section className="space-y-3">
         <div className="flex items-center justify-between">
-          <h2 className="lm-h4">Bộ từ của tôi</h2>
+          <h2 className="lm-h4">Sổ từ của bạn</h2>
           <TaoBoTuButton />
         </div>
 
@@ -96,21 +125,35 @@ function StatCard({
   color: string;
 }) {
   return (
-    <Card className="py-3 px-4">
-      <div className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${color} mb-2`}>
-        <span className="text-lg font-bold">{value}</span>
+    <Card className="border-lm-border bg-lm-bg-elev-1 px-4 py-3">
+      <div
+        className={`inline-flex h-8 w-8 items-center justify-center rounded-lg ${color} mb-2`}
+      >
+        <span className="text-base font-semibold text-lm-fg">{value}</span>
       </div>
-      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="text-xs text-lm-fg-muted">{label}</p>
     </Card>
   );
 }
 
-function DeckCard({ deck }: { deck: { id: string; ten: string; mo_ta: string | null; so_tu: number; mau_bia: string | null; la_he_thong: boolean; chu_de: string | null } }) {
+function DeckCard({
+  deck,
+}: {
+  deck: {
+    id: string;
+    ten: string;
+    mo_ta: string | null;
+    so_tu: number;
+    mau_bia: string | null;
+    la_he_thong: boolean;
+    chu_de: string | null;
+  };
+}) {
   const colorBg = deck.mau_bia ?? "#E8A33D";
 
   return (
     <Link href={`/vocab/${deck.id}`}>
-      <Card className="group cursor-pointer transition-all hover:shadow-md hover:-translate-y-0.5">
+      <Card className="group cursor-pointer border-lm-border bg-lm-bg-elev-1 transition-all hover:-translate-y-0.5 hover:shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-start justify-between gap-2">
             <CardTitle className="lm-h4 line-clamp-1">{deck.ten}</CardTitle>
@@ -123,11 +166,11 @@ function DeckCard({ deck }: { deck: { id: string; ten: string; mo_ta: string | n
         </CardHeader>
         <CardContent className="space-y-2">
           {deck.mo_ta && (
-            <p className="text-sm text-muted-foreground line-clamp-2">
+            <p className="text-sm text-lm-fg-muted line-clamp-2">
               {deck.mo_ta}
             </p>
           )}
-          <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <div className="flex items-center justify-between text-xs text-lm-fg-muted">
             <span>{deck.so_tu} từ</span>
             {deck.chu_de && <Badge variant="outline">{deck.chu_de}</Badge>}
           </div>
@@ -144,17 +187,15 @@ function DeckCard({ deck }: { deck: { id: string; ten: string; mo_ta: string | n
 
 function TaoBoTuButton() {
   // Client component for modal — imported dynamically
-  return (
-    <TaoBoTuDialog />
-  );
+  return <TaoBoTuDialog />;
 }
 
 function EmptyState({ type }: { type: "personal" | "system" }) {
   if (type === "personal") {
     return (
-      <div className="rounded-lg border border-dashed border-border p-8 text-center">
-        <BookOpenIcon className="mx-auto h-8 w-8 text-muted-foreground/50" />
-        <p className="mt-3 text-sm text-muted-foreground">
+      <div className="rounded-lg border border-dashed border-lm-border bg-lm-bg-elev-1 p-8 text-center">
+        <BookOpenIcon className="mx-auto h-8 w-8 text-lm-fg-muted/50" />
+        <p className="mt-3 text-sm text-lm-fg-muted">
           Bạn chưa có bộ từ nào.{" "}
           <Link href="/vocab/new" className="text-primary hover:underline">
             Tạo bộ từ đầu tiên
@@ -166,8 +207,8 @@ function EmptyState({ type }: { type: "personal" | "system" }) {
   }
 
   return (
-    <div className="rounded-lg border border-dashed border-border p-8 text-center">
-      <p className="text-sm text-muted-foreground">
+    <div className="rounded-lg border border-dashed border-lm-border bg-lm-bg-elev-1 p-8 text-center">
+      <p className="text-sm text-lm-fg-muted">
         Không có bộ từ hệ thống. Bộ từ hệ thống sẽ được thêm khi seed database.
       </p>
     </div>
