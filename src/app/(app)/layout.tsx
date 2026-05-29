@@ -19,14 +19,24 @@ import { Header } from "./_components/header";
  * cùng request sẽ dùng kết quả cached, không gây query lặp.
  */
 export default async function AppLayout({ children }: { children: ReactNode }) {
-  const [supabase, cookieStore] = await Promise.all([createClient(), cookies()]);
-  const { data: { user } } = await supabase.auth.getUser();
+  const [supabase, cookieStore] = await Promise.all([
+    createClient(),
+    cookies(),
+  ]);
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
     redirect("/login");
   }
 
-  const hoSo = await hoSoRepo.layHoSoHienTai(supabase);
+  let hoSo = null;
+  try {
+    hoSo = await hoSoRepo.layHoSoHienTai(supabase);
+  } catch (error) {
+    console.error("Ho so fetch failed in app layout", error);
+  }
 
   // Ưu tiên cookie (server đọc trực tiếp), fallback ho_so (lưu lâu dài).
   // Trường hợp user mới login máy khác chưa có cookie → lấy từ DB.

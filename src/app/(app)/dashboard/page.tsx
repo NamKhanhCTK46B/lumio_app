@@ -11,7 +11,11 @@ export default async function DashboardPage() {
   ]);
 
   const t = tResult as unknown as (key: string) => string;
-  const hoSo = hoSoResult.data as HoSo | null;
+  if (hoSoResult.error) {
+    console.error("Ho so fetch failed in dashboard", hoSoResult.error);
+  }
+
+  const hoSo = hoSoResult.error ? null : (hoSoResult.data as HoSo | null);
 
   return (
     <div className="space-y-6">
@@ -25,18 +29,33 @@ export default async function DashboardPage() {
       </header>
 
       <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <FeatureLink href="/vocab"   title="vocab"   desc="SRS theo SM-2" t={t} />
-        <FeatureLink href="/speak"  title="speak"   desc="Roleplay với AI" t={t} />
-        <FeatureLink href="/read"   title="read"    desc="Trích từ URL"  t={t} />
-        <FeatureLink href="/write"  title="write"   desc="IELTS scoring"  t={t} />
-        <FeatureLink href="/grammar" title="grammar" desc="Sửa ngữ pháp"   t={t} />
-        <FeatureLink href="/quiz"   title="quiz"    desc="Làm quiz"       t={t} />
+        <FeatureLink href="/vocab" title="vocab" desc="SRS theo SM-2" t={t} />
+        <FeatureLink href="/speak" title="speak" desc="Roleplay với AI" t={t} />
+        <FeatureLink href="/read" title="read" desc="Trích từ URL" t={t} />
+        <FeatureLink href="/write" title="write" desc="IELTS scoring" t={t} />
+        <FeatureLink
+          href="/grammar"
+          title="grammar"
+          desc="Sửa ngữ pháp"
+          t={t}
+        />
+        <FeatureLink href="/quiz" title="quiz" desc="Làm quiz" t={t} />
       </section>
     </div>
   );
 }
 
-function FeatureLink({ href, title, desc, t }: { href: string; title: string; desc: string; t: (key: string) => string }) {
+function FeatureLink({
+  href,
+  title,
+  desc,
+  t,
+}: {
+  href: string;
+  title: string;
+  desc: string;
+  t: (key: string) => string;
+}) {
   const label = t(title) ?? title;
   return (
     <Link

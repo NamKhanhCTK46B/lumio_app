@@ -20,6 +20,8 @@
     "speak": "Speaking",
     "read": "Reading",
     "write": "Writing",
+    "grammar": "Grammar",
+    "quiz": "Quiz",
     "settings": "Settings"
   },
   "write": {
