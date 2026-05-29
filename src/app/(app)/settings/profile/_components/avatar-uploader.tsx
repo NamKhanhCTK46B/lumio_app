@@ -1,7 +1,8 @@
 "use client";
 
-import { useRef, useState, useTransition } from "react";
-import { taiAvatarLenAction } from "../actions";
+import { useMemo, useRef, useState, useTransition } from "react";
+import { createClient } from "@/lib/supabase/client";
+import { capNhatAvatarUrlAction } from "../actions";
 
 /**
  * Avatar uploader — Client Component để preview ảnh trước khi upload.
@@ -19,10 +20,68 @@ type Props = {
 
 export function AvatarUploader({ hientai_url, ten_hien_thi }: Props) {
   const [preview, setPreview] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
   const [pending, start] = useTransition();
   const inputRef = useRef<HTMLInputElement>(null);
+  const supabase = useMemo(() => createClient(), []);
   const chu_dau = (ten_hien_thi?.[0] ?? "?").toUpperCase();
   const hienThi = preview ?? hientai_url;
+
+  async function onUpload() {
+    setError(null);
+    const file = inputRef.current?.files?.[0];
+    if (!file) {
+      setError("Vui lòng chọn ảnh.");
+      return;
+    }
+
+    const hopLe = ["image/png", "image/jpeg", "image/webp"].includes(file.type);
+    if (!hopLe) {
+      setError("Chỉ hỗ trợ định dạng PNG / JPEG / WEBP.");
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Ảnh quá lớn (tối đa 5 MB).");
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      setError("Chưa đăng nhập.");
+      return;
+    }
+
+    const duoi =
+      file.type === "image/png"
+        ? "png"
+        : file.type === "image/webp"
+          ? "webp"
+          : "jpg";
+    const path = `${user.id}/avatar.${duoi}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(path, file, {
+        upsert: true,
+        contentType: file.type,
+        cacheControl: "3600",
+      });
+
+    if (uploadError) {
+      setError("Tải ảnh thất bại: " + uploadError.message);
+      return;
+    }
+
+    const { data: urlData } = supabase.storage
+      .from("avatars")
+      .getPublicUrl(path);
+    const publicUrl = `${urlData.publicUrl}?v=${Date.now()}`;
+
+    await capNhatAvatarUrlAction(publicUrl);
+  }
 
   function khiChonFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -37,7 +96,12 @@ export function AvatarUploader({ hientai_url, ten_hien_thi }: Props) {
 
   return (
     <form
-      action={(fd) => start(async () => { await taiAvatarLenAction(fd); })}
+      onSubmit={(event) => {
+        event.preventDefault();
+        start(async () => {
+          await onUpload();
+        });
+      }}
       className="flex items-center gap-4"
     >
       <div className="relative h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
@@ -71,7 +135,10 @@ export function AvatarUploader({ hientai_url, ten_hien_thi }: Props) {
         >
           {pending ? "Đang tải..." : "Tải lên"}
         </button>
-        <span className="text-xs text-slate-500">PNG, JPEG, WEBP. Tối đa 5 MB.</span>
+        <span className="text-xs text-slate-500">
+          PNG, JPEG, WEBP. Tối đa 5 MB.
+        </span>
+        {error ? <span className="text-xs text-red-600">{error}</span> : null}
       </div>
     </form>
   );

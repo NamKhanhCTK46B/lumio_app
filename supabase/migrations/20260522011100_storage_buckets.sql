@@ -34,7 +34,13 @@ create policy "avatars_owner_delete"
     and auth.uid()::text = (storage.foldername(name))[1]
   );
 
--- Public read mặc định cho avatars (bucket.public=true), không cần policy select.
+-- Owner select: Cần thiết khi thực hiện upload/upsert qua Storage SDK để kiểm tra sự tồn tại của file.
+create policy "avatars_owner_select"
+  on storage.objects for select
+  using (
+    bucket_id = 'avatars'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
 
 -- 2. audio — file ghi âm phát âm + roleplay -------------------------
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)

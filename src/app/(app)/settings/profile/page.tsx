@@ -24,8 +24,8 @@ export default async function ProfilePage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900">Hồ sơ cá nhân</h1>
-        <p className="text-sm text-slate-600">
+        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Hồ sơ cá nhân</h1>
+        <p className="text-sm text-slate-700 dark:text-slate-300">
           Quản lý thông tin hiển thị và tuỳ chỉnh học tập.
         </p>
       </header>
@@ -48,8 +48,8 @@ export default async function ProfilePage({ searchParams }: Props) {
         </div>
       ) : null}
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
-        <h2 className="mb-4 text-base font-medium text-slate-900">Ảnh đại diện</h2>
+      <section className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
+        <h2 className="mb-4 text-base font-medium text-slate-900 dark:text-slate-100">Ảnh đại diện</h2>
         <AvatarUploader
           hientai_url={hoSo.url_avatar}
           ten_hien_thi={hoSo.ten_hien_thi ?? hoSo.email ?? ""}

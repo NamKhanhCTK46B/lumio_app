@@ -177,7 +177,7 @@ async function layArticleContent(url: string): Promise<{
     const bodyMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
     if (!bodyMatch) return { tieu_de: title, noi_dung: "" };
 
-    let text = bodyMatch[1]
+    const text = bodyMatch[1]
       .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, "")
       .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, "")
       .replace(/<[^>]+>/g, " ")

@@ -161,7 +161,7 @@ export function VocabListClient({
 
       {filtered.length === 0 && search && (
         <p className="py-8 text-center text-sm text-muted-foreground">
-          Không tìm thấy từ nào matching "{search}"
+          Không tìm thấy từ nào matching &quot;{search}&quot;
         </p>
       )}
     </div>
