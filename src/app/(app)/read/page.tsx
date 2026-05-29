@@ -1,54 +1,17 @@
-"use client";
-
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/server";
+import { contentRepo } from "@/lib/repositories/nguon_noi_dung.repo";
 import { Card, CardContent } from "@/components/ui/card";
-import { LoaderIcon, GlobeIcon, BookOpenIcon, LinkIcon } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { BookOpenIcon, GlobeIcon, LinkIcon } from "lucide-react";
+import { ImportSourceForm, SupportedSourceCard } from "./_components/import-source-form";
 
-type SourceType = "youtube" | "article" | "podcast";
-
-export default function ReadPage() {
-  const [url, setUrl] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-
-  function detectType(u: string): SourceType {
-    if (u.includes("youtube.com") || u.includes("youtu.be")) return "youtube";
-    if (u.includes("spotify.com") || u.includes("podcast")) return "podcast";
-    return "article";
-  }
-
-  async function handleImport() {
-    if (!url.trim()) return;
-    setError("");
-    setLoading(true);
-
-    try {
-      const type = detectType(url);
-      const res = await fetch("/api/ai/read", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url, type }),
-      });
-
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Lỗi khi trích nội dung");
-      }
-
-      const data = await res.json();
-      // Redirect to reader page
-      window.location.href = `/read/${data.sourceId}`;
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Lỗi không xác định");
-    } finally {
-      setLoading(false);
-    }
-  }
+export default async function ReadPage() {
+  const supabase = await createClient();
+  const sources = await contentRepo.danhSachNguon(supabase);
 
   return (
-    <div className="max-w-xl mx-auto space-y-8">
+    <div className="mx-auto max-w-3xl space-y-8">
       <div className="space-y-2">
         <h1 className="lm-h2">Đọc &amp; học</h1>
         <p className="text-sm text-muted-foreground">
@@ -56,75 +19,57 @@ export default function ReadPage() {
         </p>
       </div>
 
-      <Card>
-        <CardContent className="pt-6 space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">URL nguồn</label>
-            <Input
-              placeholder="https://youtube.com/watch?v=... hoặc https://..."
-              value={url}
-              onChange={(e) => setUrl(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleImport()}
-            />
+      <ImportSourceForm />
+
+      <section className="space-y-3">
+        <h2 className="lm-h4">Nguồn đã nhập</h2>
+        {sources.length === 0 ? (
+          <Card>
+            <CardContent className="py-8 text-center text-sm text-muted-foreground">
+              Bạn chưa nhập nguồn đọc nào.
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-3">
+            {sources.map((source) => (
+              <Link key={source.id} href={`/read/${source.id}`}>
+                <Card className="transition-all hover:shadow-md hover:-translate-y-0.5">
+                  <CardContent className="flex items-start justify-between gap-4 p-4">
+                    <div className="min-w-0 space-y-1">
+                      <p className="truncate font-medium">{source.tieu_de ?? source.url}</p>
+                      <p className="truncate text-xs text-muted-foreground">{source.url}</p>
+                    </div>
+                    <Badge variant="outline" className="shrink-0">
+                      {source.loai}
+                    </Badge>
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
           </div>
+        )}
+      </section>
 
-          {error && (
-            <p className="text-sm text-destructive">{error}</p>
-          )}
-
-          <Button
-            className="w-full"
-            onClick={handleImport}
-            disabled={!url.trim() || loading}
-          >
-            {loading ? (
-              <>
-                <LoaderIcon className="h-4 w-4 mr-2 animate-spin" />
-                Đang trích nội dung...
-              </>
-            ) : (
-              <>
-                <GlobeIcon className="h-4 w-4 mr-2" />
-                Nhập nguồn
-              </>
-            )}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {/* Supported sources */}
-      <div className="space-y-3">
+      <section className="space-y-3">
         <h2 className="lm-h4">Nguồn hỗ trợ</h2>
         <div className="grid gap-2 sm:grid-cols-3">
-          <SourceCard
+          <SupportedSourceCard
             icon={<LinkIcon className="h-5 w-5" />}
             title="YouTube"
             desc="Transcript video"
           />
-          <SourceCard
+          <SupportedSourceCard
             icon={<GlobeIcon className="h-5 w-5" />}
             title="Bài báo web"
             desc="Bài viết tiếng Anh"
           />
-          <SourceCard
+          <SupportedSourceCard
             icon={<BookOpenIcon className="h-5 w-5" />}
             title="Podcast RSS"
             desc="Transcript podcast"
           />
         </div>
-      </div>
-    </div>
-  );
-}
-
-function SourceCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
-  return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-      <div className="text-muted-foreground">{icon}</div>
-      <div>
-        <p className="text-sm font-medium">{title}</p>
-        <p className="text-xs text-muted-foreground">{desc}</p>
-      </div>
+      </section>
     </div>
   );
 }

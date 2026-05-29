@@ -5,9 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LoaderIcon } from "lucide-react";
-import { llm } from "@/lib/ai/provider";
-import { pronunciationUserPrompt, pronunciationSystemPrompt } from "@/lib/ai/prompts/pronunciation-feedback";
-import { PronunciationFeedbackSchema } from "@/lib/ai/prompts/pronunciation-feedback";
+import { kiemTraGrammarAction, type GrammarResult } from "./actions";
 
 const SAMPLE_SENTENCES = [
   { text: "I would like a cup of coffee, please.", level: "A2" },
@@ -18,7 +16,7 @@ const SAMPLE_SENTENCES = [
 export default function GrammarPage() {
   const [inputText, setInputText] = useState("");
   const [correcting, setCorrecting] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
+  const [result, setResult] = useState<GrammarResult | null>(null);
   const [error, setError] = useState("");
 
   async function handleCorrect(text: string) {
@@ -27,23 +25,13 @@ export default function GrammarPage() {
     setError("");
     setResult(null);
 
-    try {
-      const response = await llm({
-        he_thong: `Bạn là giáo viên ngữ pháp tiếng Anh. Nhận một câu tiếng Anh và trả về câu đã sửa lỗi ngữ pháp. Nếu câu đúng, trả về "OK". Luôn giải thích ngắn gọn bằng tiếng Việt tại sao cần sửa (hoặc tại sao câu đúng).`,
-        nguoi_dung: `<input>${text}</input>\n\nTrả về JSON: { "corrected": "...", "explanation": "..." }`,
-        yeu_cau_json: true,
-      });
+    const res = await kiemTraGrammarAction({ cau: text });
+    setCorrecting(false);
 
-      const data = response.json as { corrected: string; explanation: string } | null;
-      if (data) {
-        setResult(`${data.corrected}\n\nGiải thích: ${data.explanation}`);
-      } else {
-        setError("Không phân tích được kết quả. Thử lại.");
-      }
-    } catch {
-      setError("Lỗi khi gọi AI. Kiểm tra API key.");
-    } finally {
-      setCorrecting(false);
+    if (res.ok) {
+      setResult(res.data);
+    } else {
+      setError(res.error);
     }
   }
 
@@ -84,7 +72,11 @@ export default function GrammarPage() {
             </Button>
             <Button
               variant="outline"
-              onClick={() => setInputText("")}
+              onClick={() => {
+                setInputText("");
+                setResult(null);
+                setError("");
+              }}
               disabled={correcting}
             >
               Xoá
@@ -93,8 +85,15 @@ export default function GrammarPage() {
           {error && <p className="text-sm text-destructive">{error}</p>}
           {result && (
             <div className="rounded-lg bg-lm-success-soft p-4 space-y-2">
-              <p className="font-medium text-lm-success-ink">Kết quả:</p>
-              <p className="whitespace-pre-wrap text-sm">{result}</p>
+              <p className="font-medium text-lm-success-ink">
+                {result.corrected === "OK" ? "Câu đúng!" : "Kết quả:"}
+              </p>
+              {result.corrected !== "OK" && (
+                <p className="font-mono text-sm bg-white/60 rounded px-2 py-1">
+                  {result.corrected}
+                </p>
+              )}
+              <p className="whitespace-pre-wrap text-sm">{result.explanation}</p>
             </div>
           )}
         </CardContent>
@@ -118,9 +117,7 @@ export default function GrammarPage() {
               <Button
                 size="sm"
                 variant="outline"
-                onClick={() => {
-                  setInputText(s.text);
-                }}
+                onClick={() => setInputText(s.text)}
               >
                 Dùng
               </Button>

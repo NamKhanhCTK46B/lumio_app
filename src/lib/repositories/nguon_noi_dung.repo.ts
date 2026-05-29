@@ -108,6 +108,20 @@ export const contentRepo = {
   },
 
   /**
+   * Liệt kê nguồn nội dung gần đây của user hiện tại.
+   */
+  async danhSachNguon(supabase: SupabaseClient): Promise<NguonNoiDungRow[]> {
+    const { data, error } = await supabase
+      .from("nguon_noi_dung")
+      .select("*")
+      .order("tao_luc", { ascending: false })
+      .limit(50);
+
+    if (error) throw error;
+    return data as NguonNoiDungRow[];
+  },
+
+  /**
    * Tìm nguồn theo URL hash (dedup).
    */
   async timTheoUrl(
