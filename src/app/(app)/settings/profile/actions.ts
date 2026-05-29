@@ -27,7 +27,9 @@ export async function capNhatHoSoAction(formData: FormData): Promise<void> {
   }
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) {
     throw new Error("Chưa đăng nhập"); // (app)/layout đã redirect — defensive
   }
@@ -52,7 +54,9 @@ const KICH_THUOC_TOI_DA = 5 * 1024 * 1024; // 5 MB — khớp file_size_limit bu
 export async function taiAvatarLenAction(formData: FormData): Promise<void> {
   const file = formData.get("avatar");
   if (!(file instanceof File) || file.size === 0) {
-    redirect("/settings/profile?error=" + encodeURIComponent("Vui lòng chọn ảnh."));
+    redirect(
+      "/settings/profile?error=" + encodeURIComponent("Vui lòng chọn ảnh."),
+    );
   }
 
   if (!MIME_HOP_LE.has(file.type)) {
@@ -64,17 +68,25 @@ export async function taiAvatarLenAction(formData: FormData): Promise<void> {
 
   if (file.size > KICH_THUOC_TOI_DA) {
     redirect(
-      "/settings/profile?error=" + encodeURIComponent("Ảnh quá lớn (tối đa 5 MB)."),
+      "/settings/profile?error=" +
+        encodeURIComponent("Ảnh quá lớn (tối đa 5 MB)."),
     );
   }
 
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   if (!user) throw new Error("Chưa đăng nhập");
 
   // Trích extension từ MIME — đặt tên cố định "avatar.<ext>" + upsert
   // để mỗi user chỉ giữ 1 file avatar (đỡ rác Storage).
-  const duoi = file.type === "image/png" ? "png" : file.type === "image/webp" ? "webp" : "jpg";
+  const duoi =
+    file.type === "image/png"
+      ? "png"
+      : file.type === "image/webp"
+        ? "webp"
+        : "jpg";
   const path = `${user.id}/avatar.${duoi}`;
 
   const { error: uploadError } = await supabase.storage
@@ -99,5 +111,31 @@ export async function taiAvatarLenAction(formData: FormData): Promise<void> {
   await hoSoRepo.capNhatAvatar(supabase, user.id, publicUrl);
 
   revalidatePath("/settings/profile");
-  redirect("/settings/profile?ok=" + encodeURIComponent("Đã cập nhật ảnh đại diện."));
+  redirect(
+    "/settings/profile?ok=" + encodeURIComponent("Đã cập nhật ảnh đại diện."),
+  );
+}
+
+/**
+ * Cập nhật url_avatar sau khi upload client-side.
+ */
+export async function capNhatAvatarUrlAction(url: string): Promise<void> {
+  if (!url) {
+    redirect(
+      "/settings/profile?error=" + encodeURIComponent("URL ảnh không hợp lệ."),
+    );
+  }
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Chưa đăng nhập");
+
+  await hoSoRepo.capNhatAvatar(supabase, user.id, url);
+
+  revalidatePath("/settings/profile");
+  redirect(
+    "/settings/profile?ok=" + encodeURIComponent("Đã cập nhật ảnh đại diện."),
+  );
 }

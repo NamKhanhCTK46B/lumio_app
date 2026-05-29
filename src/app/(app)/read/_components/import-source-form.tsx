@@ -49,49 +49,59 @@ export function ImportSourceForm() {
   }
 
   return (
-    <Card>
-      <CardContent className="pt-6 space-y-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium">URL nguồn</label>
-          <Input
-            placeholder="https://youtube.com/watch?v=... hoặc https://..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleImport()}
-          />
+    <Card className="border-lm-border bg-lm-bg-elev-1">
+      <CardContent className="pt-6 space-y-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-1 items-center gap-2 rounded-lg border border-lm-border bg-lm-bg-muted px-3 py-2">
+            <LinkIcon className="h-4 w-4 text-lm-fg-muted" />
+            <Input
+              placeholder="https://youtube.com/watch?v=... hoặc https://..."
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleImport()}
+              className="h-6 border-0 bg-transparent px-0 py-0 text-sm focus-visible:border-transparent focus-visible:ring-0"
+            />
+          </div>
+          <Button
+            className="w-full sm:w-auto"
+            onClick={handleImport}
+            disabled={!url.trim() || loading}
+          >
+            {loading ? (
+              <>
+                <LoaderIcon className="h-4 w-4 mr-2 animate-spin" />
+                Đang trích nội dung...
+              </>
+            ) : (
+              <>
+                <GlobeIcon className="h-4 w-4 mr-2" />
+                Trích xuất
+              </>
+            )}
+          </Button>
         </div>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        <Button
-          className="w-full"
-          onClick={handleImport}
-          disabled={!url.trim() || loading}
-        >
-          {loading ? (
-            <>
-              <LoaderIcon className="h-4 w-4 mr-2 animate-spin" />
-              Đang trích nội dung...
-            </>
-          ) : (
-            <>
-              <GlobeIcon className="h-4 w-4 mr-2" />
-              Nhập nguồn
-            </>
-          )}
-        </Button>
+        {error && <p className="text-xs text-lm-danger-ink">{error}</p>}
       </CardContent>
     </Card>
   );
 }
 
-export function SourceCard({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+export function SourceCard({
+  icon,
+  title,
+  desc,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  desc: string;
+}) {
   return (
-    <div className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-      <div className="text-muted-foreground">{icon}</div>
+    <div className="flex items-center gap-3 rounded-lg border border-lm-border bg-lm-bg-elev-1 p-3">
+      <div className="text-lm-fg-muted">{icon}</div>
       <div>
-        <p className="text-sm font-medium">{title}</p>
-        <p className="text-xs text-muted-foreground">{desc}</p>
+        <p className="text-sm font-semibold text-lm-fg">{title}</p>
+        <p className="text-xs text-lm-fg-muted">{desc}</p>
       </div>
     </div>
   );

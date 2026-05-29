@@ -1,7 +1,4 @@
-import {
-  GoogleGenAI,
-  type GenerateContentConfig,
-} from "@google/genai";
+import { GoogleGenAI, type GenerateContentConfig } from "@google/genai";
 
 /**
  * Single entrypoint cho mọi LLM call. Feature code KHÔNG được import
@@ -12,8 +9,8 @@ import {
  * fallback deterministic khi thiếu API key cho local dev không có quota.
  */
 
-const MODEL_MAC_DINH = "gemini-3-flash";
-const MODEL_STREAM = "gemini-3-flash";
+const MODEL_MAC_DINH = process.env.GEMINI_MODEL ?? "gemini-2.5-flash";
+const MODEL_STREAM = process.env.GEMINI_MODEL_STREAM ?? MODEL_MAC_DINH;
 const NHIET_DO_MAC_DINH = 0.7;
 
 type LLMInput = {

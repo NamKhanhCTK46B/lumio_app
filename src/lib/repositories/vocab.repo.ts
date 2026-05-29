@@ -6,7 +6,11 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import type { LuuTuVungInput, TaoBoTuInput, CapNhatBoTuInput } from "@/lib/schemas/vocab";
+import type {
+  LuuTuVungInput,
+  TaoBoTuInput,
+  CapNhatBoTuInput,
+} from "@/lib/schemas/vocab";
 
 // ---------------------------------------------------------------------------
 // Types (lấy từ Supabase generated types — tạm khai báo ở đây)
@@ -71,6 +75,17 @@ export type ReviewWordRow = TuDaLuuRow & {
   lich_on_tap: LichOnTapRow | null;
 };
 
+async function layNguoiDungId(supabase: SupabaseClient): Promise<string> {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) {
+    throw new Error("Chưa đăng nhập");
+  }
+  return user.id;
+}
+
 // ---------------------------------------------------------------------------
 // Bo từ
 // ---------------------------------------------------------------------------
@@ -92,7 +107,10 @@ export const vocabRepo = {
   /**
    * Lấy một bộ từ theo ID.
    */
-  async layBoTu(supabase: SupabaseClient, boTuId: string): Promise<BoTuRow | null> {
+  async layBoTu(
+    supabase: SupabaseClient,
+    boTuId: string,
+  ): Promise<BoTuRow | null> {
     const { data, error } = await supabase
       .from("bo_tu")
       .select("*")
@@ -110,9 +128,10 @@ export const vocabRepo = {
     supabase: SupabaseClient,
     input: TaoBoTuInput,
   ): Promise<BoTuRow> {
+    const nguoiDungId = await layNguoiDungId(supabase);
     const { data, error } = await supabase
       .from("bo_tu")
-      .insert({ ...input, la_he_thong: false })
+      .insert({ ...input, la_he_thong: false, nguoi_dung_id: nguoiDungId })
       .select()
       .single();
 
@@ -178,7 +197,10 @@ export const vocabRepo = {
   /**
    * Lấy một từ theo ID.
    */
-  async layTu(supabase: SupabaseClient, tuId: string): Promise<TuDaLuuRow | null> {
+  async layTu(
+    supabase: SupabaseClient,
+    tuId: string,
+  ): Promise<TuDaLuuRow | null> {
     const { data, error } = await supabase
       .from("tu_da_luu")
       .select("*")
@@ -192,11 +214,16 @@ export const vocabRepo = {
   /**
    * Lưu từ mới (tạo tu_da_luu + lich_on_tap cùng lúc).
    */
-  async luuTu(supabase: SupabaseClient, input: LuuTuVungInput): Promise<TuDaLuuRow> {
+  async luuTu(
+    supabase: SupabaseClient,
+    input: LuuTuVungInput,
+  ): Promise<TuDaLuuRow> {
+    const nguoiDungId = await layNguoiDungId(supabase);
     // 1. Insert tu_da_luu
     const { data: tu, error: errTu } = await supabase
       .from("tu_da_luu")
       .insert({
+        nguoi_dung_id: nguoiDungId,
         tu_goc: input.tu_goc,
         loai_tu: input.loai_tu,
         phien_am: input.phien_am,
@@ -217,7 +244,7 @@ export const vocabRepo = {
     // 2. Insert lich_on_tap (lên lịch ôn lần đầu = now)
     const { error: errLich } = await supabase.from("lich_on_tap").insert({
       tu_id: tu.id,
-      nguoi_dung_id: (tu as TuDaLuuRow).nguoi_dung_id,
+      nguoi_dung_id: nguoiDungId,
       on_tap_ke_luc: new Date().toISOString(),
     });
 
@@ -248,7 +275,10 @@ export const vocabRepo = {
   /**
    * Toggle đánh dấu sao.
    */
-  async toggleDanhDau(supabase: SupabaseClient, tuId: string): Promise<boolean> {
+  async toggleDanhDau(
+    supabase: SupabaseClient,
+    tuId: string,
+  ): Promise<boolean> {
     const tu = await this.layTu(supabase, tuId);
     if (!tu) throw new Error("Không tìm thấy từ");
 
@@ -334,7 +364,10 @@ export const vocabRepo = {
   /**
    * Lấy lịch ôn của một từ.
    */
-  async layLichOn(supabase: SupabaseClient, tuId: string): Promise<LichOnTapRow | null> {
+  async layLichOn(
+    supabase: SupabaseClient,
+    tuId: string,
+  ): Promise<LichOnTapRow | null> {
     const { data, error } = await supabase
       .from("lich_on_tap")
       .select("*")
