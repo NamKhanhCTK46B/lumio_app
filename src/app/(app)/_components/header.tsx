@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { UserMenu } from "./user-menu";
 import { PreferencesMenu } from "./preferences-menu";
+import { NotificationBell } from "./notification-bell";
 import type { Locale, Theme } from "@/i18n/config";
 
 /**
@@ -32,6 +33,9 @@ export function Header({
           Lumio
         </Link>
         <div className="flex items-center gap-2">
+          <Link href="/notifications">
+            <NotificationBell />
+          </Link>
           <PreferencesMenu current_theme={current_theme} current_locale={current_locale} />
           <UserMenu email={email} ten_hien_thi={ten_hien_thi} url_avatar={url_avatar} />
         </div>
