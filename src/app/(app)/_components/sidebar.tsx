@@ -12,7 +12,15 @@ import {
   Brain,
   Settings,
   Flame,
+  type LucideIcon,
 } from "lucide-react";
+
+type NavItem = {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  badge?: string;
+};
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Tổng quan" },
@@ -22,7 +30,7 @@ const NAV_ITEMS = [
   { href: "/write", icon: PenLine, label: "Luyện viết" },
   { href: "/grammar", icon: SpellCheck2, label: "Ngữ pháp" },
   { href: "/quiz", icon: Brain, label: "Quiz" },
-] as const;
+] satisfies NavItem[];
 
 const BOTTOM_NAV_ITEMS = [
   { href: "/settings/profile", icon: Settings, label: "Cài đặt" },
