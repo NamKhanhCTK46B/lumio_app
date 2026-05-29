@@ -204,7 +204,8 @@ export const baiVietRepo = {
       .select("id, loai_de, nop_luc, diem_tong, score_task_achievement, score_coherence, score_lexical, score_grammar")
       .not("nop_luc", "is", null)
       .order("nop_luc", { ascending: true })
-      .limit(limit);
+      .limit(limit)
+      .returns<BaiVietRow[]>();
     if (error) throw error;
     return data ?? [];
   },
@@ -215,7 +216,8 @@ export const baiVietRepo = {
       .from("bai_viet")
       .select("id, loai_de, de_bai_snapshot, so_tu, nop_luc, diem_tong, tao_luc, cap_nhat_luc")
       .order("cap_nhat_luc", { ascending: false })
-      .limit(limit);
+      .limit(limit)
+      .returns<BaiVietRow[]>();
     if (error) throw error;
     return data ?? [];
   },
