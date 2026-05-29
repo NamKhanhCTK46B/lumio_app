@@ -8,6 +8,11 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   // Build standalone server.js + minimal node_modules — cần cho Dockerfile production.
   output: "standalone",
+  // Không bundle các native Node.js packages của Google Cloud vào client build.
+  serverExternalPackages: [
+    "@google-cloud/speech",
+    "@google-cloud/text-to-speech",
+  ],
 };
 
 export default withNextIntl(nextConfig);
