@@ -1,14 +1,18 @@
 -- Lumio — seed data v2 (tiếng Việt)
--- Chạy sau khi 12 migration apply xong qua `supabase db reset`.
--- Bao gồm: 5 user demo + catalog (nhân vật, bộ từ hệ thống, đề bài) + lịch sử giả 7 ngày.
+-- Gộp từ seed.sql + seed.remote.sql thành 1 file duy nhất.
+-- Dùng cho cả local (supabase db reset) và remote (paste vào SQL Editor).
 --
--- Password chung cho mọi user demo: Demo2026!
+-- Chạy sau khi 9 migration apply xong.
+-- Bao gồm: 6 user (5 demo + 1 admin) + catalog (nhân vật, bộ từ hệ thống, đề bài)
+--         + lịch sử giả 7 ngày.
+--
+-- Password chung cho 5 user demo: Demo2026!
 -- Đăng nhập tại /login bằng email + password trên.
 
 set client_min_messages to warning;
 
 -- ============================================================================
--- 1. AUTH USERS — 5 user demo trải nhiều profile
+-- 1. AUTH USERS — 5 user demo + 1 admin
 -- ============================================================================
 -- Insert trực tiếp vào auth.users + auth.identities. Trigger on_auth_user_created
 -- sẽ tự insert vào public.ho_so qua function tao_ho_so_khi_dang_ky.
@@ -151,7 +155,10 @@ values (
 )
 on conflict (provider_id, provider) do nothing;
 
--- Cập nhật ho_so (trigger đã insert hàng cơ bản — bổ sung trinh_do, mục tiêu UX).
+-- ============================================================================
+-- 2. CAP_NHAT_HO_SO — Bổ sung trinh_do, mục tiêu UX cho từng user
+-- ============================================================================
+-- Trigger đã insert hàng cơ bản vào ho_so — bổ sung thêm field.
 update public.ho_so set
   trinh_do_cefr = 'A2', do_tin_cefr = 0.78, mui_gio = 'Asia/Ho_Chi_Minh',
   phut_moi_ngay = 20, hoan_tat_onboard_luc = now() - interval '29 days',
@@ -187,7 +194,7 @@ update public.ho_so set
   where id = '99999999-9999-9999-9999-999999999999';
 
 -- ============================================================================
--- 2. MUC_TIEU_ND — Mục tiêu chính cho mỗi user
+-- 3. MUC_TIEU_ND — Mục tiêu chính cho mỗi user
 -- ============================================================================
 insert into public.muc_tieu_nd (nguoi_dung_id, muc_tieu, diem_muc_tieu, han_chot, la_muc_tieu_chinh)
 values
@@ -200,7 +207,7 @@ values
   ('99999999-9999-9999-9999-999999999999', 'ielts',     7.0,  '2026-12-31', true);
 
 -- ============================================================================
--- 3. NHAN_VAT — Catalog persona roleplay (public)
+-- 4. NHAN_VAT — 3 nhân vật catalog (idempotent)
 -- ============================================================================
 insert into public.nhan_vat (id, slug, ten, giong, prompt_nhan_vat, cefr_toi_thieu, nhan)
 values
@@ -230,10 +237,17 @@ values
     'You are Mei, an Australian travel guide based in Sydney. Use Aussie expressions naturally. Help learner roleplay travel scenarios: ordering food, asking directions, checking in hotels. Keep replies clear and supportive.',
     'A2',
     array['travel','aussie']
-  );
+  )
+on conflict (id) do update set
+  ten = excluded.ten,
+  giong = excluded.giong,
+  prompt_nhan_vat = excluded.prompt_nhan_vat,
+  cefr_toi_thieu = excluded.cefr_toi_thieu,
+  nhan = excluded.nhan,
+  cap_nhat_luc = now();
 
 -- ============================================================================
--- 4. BO_TU — 6 bộ từ hệ thống (la_he_thong=true, nguoi_dung_id=null)
+-- 5. BO_TU — 6 bộ từ hệ thống (idempotent)
 -- ============================================================================
 insert into public.bo_tu (id, nguoi_dung_id, ten, mo_ta, mau_bia, la_he_thong, chu_de, cefr_phu_hop)
 values
@@ -242,10 +256,16 @@ values
   ('bbbbbbbb-0000-0000-0000-000000000003', null, 'Business B2',     'Từ vựng văn phòng + email + meeting.',                        '#10B981', true, 'business', 'B2'),
   ('bbbbbbbb-0000-0000-0000-000000000004', null, 'Movies B1',       'Từ vựng phim ảnh + TV series + critique.',                    '#EF4444', true, 'movies',   'B1'),
   ('bbbbbbbb-0000-0000-0000-000000000005', null, 'Academic C1',     'Từ vựng học thuật + paper + thesis.',                         '#8B5CF6', true, 'academic', 'C1'),
-  ('bbbbbbbb-0000-0000-0000-000000000006', null, 'TOEIC Workplace', 'Từ vựng TOEIC reading + listening.',                          '#06B6D4', true, 'toeic',    'B2');
+  ('bbbbbbbb-0000-0000-0000-000000000006', null, 'TOEIC Workplace', 'Từ vựng TOEIC reading + listening.',                          '#06B6D4', true, 'toeic',    'B2')
+on conflict (id) do update set
+  ten = excluded.ten,
+  mo_ta = excluded.mo_ta,
+  chu_de = excluded.chu_de,
+  cefr_phu_hop = excluded.cefr_phu_hop,
+  cap_nhat_luc = now();
 
 -- ============================================================================
--- 5. DE_BAI_VIET — 10 đề bài catalog
+-- 6. DE_BAI_VIET — 10 đề bài catalog (idempotent)
 -- ============================================================================
 insert into public.de_bai_viet (loai_de, cefr_phu_hop, chu_de, de_bai, gioi_han_phut, so_tu_toi_thieu, nguon, url_nguon)
 values
@@ -278,10 +298,11 @@ values
     25, 120, 'Lumio', null),
   ('tu_do','B1','any',
     'Viết về một kỷ niệm đáng nhớ trong tuổi thơ của bạn (free writing — không có yêu cầu cấu trúc).',
-    30, 200, 'Lumio', null);
+    30, 200, 'Lumio', null)
+on conflict do nothing;
 
 -- ============================================================================
--- 6. NGUON_NOI_DUNG — Mỗi user 1 nguồn YouTube + 3 đoạn transcript
+-- 7. NGUON_NOI_DUNG — Mỗi user 1 nguồn YouTube + 3 đoạn transcript
 -- ============================================================================
 do $$
 declare
@@ -289,7 +310,7 @@ declare
   v_source_id uuid;
   v_emails text[] := array[
     'an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn',
-    'linh.demo@lumio.vn','huy.demo@lumio.vn'
+    'linh.demo@lumio.vn','huy.demo@lumio.vn','khanh51024@gmail.com'
   ];
   v_email text;
 begin
@@ -316,14 +337,14 @@ begin
 end $$;
 
 -- ============================================================================
--- 7. TU_DA_LUU — 5 từ mỗi user (mix bộ hệ thống + cá nhân, sample)
+-- 8. BO_TU cá nhân + TU_DA_LUU + LICH_ON_TAP — Từ vựng cho mỗi user
 -- ============================================================================
 -- Bộ từ cá nhân "Từ của tôi" cho từng user
 insert into public.bo_tu (nguoi_dung_id, ten, mo_ta, mau_bia, la_he_thong)
 select id, 'Từ của tôi', 'Từ cá nhân bạn tự lưu khi học.', '#F59E0B', false
-from auth.users where email like '%@lumio.vn';
+from auth.users where email like '%@lumio.vn' or email = 'khanh51024@gmail.com';
 
--- Sample 5 từ cho user "An" (A2). Tương tự pattern cho 4 user còn lại.
+-- 5 từ mẫu cho mỗi user (mix trạng thái: thuoc, on_tap, dang_hoc, moi)
 do $$
 declare
   v_user uuid;
@@ -340,7 +361,7 @@ declare
     {"tu":"prevalent","loai":"adj","ipa":"/ˈprɛvələnt/","vi":"phổ biến","en":"widespread","cefr":"C1"}
   ]'::jsonb;
   v_word jsonb;
-  v_emails text[] := array['an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn','linh.demo@lumio.vn','huy.demo@lumio.vn'];
+  v_emails text[] := array['an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn','linh.demo@lumio.vn','huy.demo@lumio.vn','khanh51024@gmail.com'];
   v_email text;
   v_idx int;
 begin
@@ -385,13 +406,13 @@ begin
 end $$;
 
 -- ============================================================================
--- 8. PHIEN_NOI + LUOT_NOI — 1 phiên speaking mỗi user, 4 lượt nói
+-- 9. PHIEN_NOI + LUOT_NOI — 1 phiên speaking mỗi user, 4 lượt nói
 -- ============================================================================
 do $$
 declare
   v_user uuid;
   v_phien uuid;
-  v_emails text[] := array['an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn','linh.demo@lumio.vn','huy.demo@lumio.vn'];
+  v_emails text[] := array['an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn','linh.demo@lumio.vn','huy.demo@lumio.vn','khanh51024@gmail.com'];
   v_email text;
 begin
   foreach v_email in array v_emails loop
@@ -421,14 +442,14 @@ begin
 end $$;
 
 -- ============================================================================
--- 9. BAI_VIET + CHU_THICH_BAI_VIET — 1 bài viết hoàn chỉnh mỗi user
+-- 10. BAI_VIET + CHU_THICH_BAI_VIET — 1 bài viết hoàn chỉnh mỗi user
 -- ============================================================================
 do $$
 declare
   v_user uuid;
   v_bai uuid;
   v_de uuid;
-  v_emails text[] := array['an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn','linh.demo@lumio.vn','huy.demo@lumio.vn'];
+  v_emails text[] := array['an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn','linh.demo@lumio.vn','huy.demo@lumio.vn','khanh51024@gmail.com'];
   v_email text;
 begin
   select id into v_de from public.de_bai_viet where loai_de = 'email' and cefr_phu_hop = 'A2' limit 1;
@@ -460,12 +481,12 @@ begin
 end $$;
 
 -- ============================================================================
--- 10. PHIEN_HOC — Activity log 7 ngày gần nhất cho mỗi user
+-- 11. PHIEN_HOC — Activity log 7 ngày gần nhất cho mỗi user
 -- ============================================================================
 do $$
 declare
   v_user uuid;
-  v_emails text[] := array['an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn','linh.demo@lumio.vn','huy.demo@lumio.vn'];
+  v_emails text[] := array['an.demo@lumio.vn','chau.demo@lumio.vn','phuc.demo@lumio.vn','linh.demo@lumio.vn','huy.demo@lumio.vn','khanh51024@gmail.com'];
   v_email text;
   v_activities loai_hoat_dong[] := array['noi','on_tu','doc','viet','quiz']::loai_hoat_dong[];
   v_i int;
@@ -473,7 +494,7 @@ begin
   foreach v_email in array v_emails loop
     select id into v_user from auth.users where email = v_email;
 
-    -- 7 ngày * 1-2 phiên = ~10 hàng phien_hoc
+    -- 7 ngày * 1 phiên = 7 hàng phien_hoc
     for v_i in 0..6 loop
       insert into public.phien_hoc (nguoi_dung_id, loai_hoat_dong, bat_dau_luc, ket_thuc_luc, thoi_luong_giay, chi_so)
       values (
@@ -489,7 +510,7 @@ begin
 end $$;
 
 -- ============================================================================
--- 11. THONG_BAO — 2 thông báo mẫu mỗi user (1 unread + 1 read)
+-- 12. THONG_BAO — 2 thông báo mẫu mỗi user (1 unread + 1 read)
 -- ============================================================================
 insert into public.thong_bao (nguoi_dung_id, loai, tieu_de, noi_dung, url_hanh_dong, doc_luc, lich_gui_luc)
 select
@@ -501,7 +522,7 @@ select
   null,
   now() - interval '1 hour'
 from auth.users u
-where u.email like '%@lumio.vn';
+where u.email like '%@lumio.vn' or u.email = 'khanh51024@gmail.com';
 
 insert into public.thong_bao (nguoi_dung_id, loai, tieu_de, noi_dung, url_hanh_dong, doc_luc, lich_gui_luc)
 select
@@ -513,7 +534,7 @@ select
   now() - interval '12 hours',
   now() - interval '1 day'
 from auth.users u
-where u.email like '%@lumio.vn';
+where u.email like '%@lumio.vn' or u.email = 'khanh51024@gmail.com';
 
 -- ============================================================================
 -- Refresh MV ngay để dashboard có dữ liệu sau seed
@@ -521,7 +542,7 @@ where u.email like '%@lumio.vn';
 refresh materialized view public.mv_thong_ke_nguoi_dung;
 
 -- ============================================================================
--- Sanity check (in vào output supabase db reset để dev biết seed chạy đúng)
+-- Sanity check
 -- ============================================================================
 do $$
 declare
