@@ -5,7 +5,10 @@
       "Bash(pnpm exec *)",
       "Bash(pnpm run *)",
       "Bash(git remote *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "WebSearch",
+      "WebFetch(domain:vinahost.vn)",
+      "Bash(git commit -m ' *)"
     ]
   }
 }

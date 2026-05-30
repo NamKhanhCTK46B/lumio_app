@@ -58,11 +58,13 @@ export function TaoBoTuDialog() {
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger>
-        <Button size="sm" variant="outline" className="gap-1.5">
+      <DialogTrigger
+        render={
+          <Button size="sm" variant="outline" className="gap-1.5" />
+        }
+      >
           <PlusIcon className="h-3.5 w-3.5" />
           Tạo bộ từ
-        </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>

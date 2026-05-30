@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toggleDanhDauAction, xoaTuAction } from "../../actions";
+import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { StarIcon, SearchIcon, Trash2Icon } from "lucide-react";
@@ -25,6 +25,45 @@ export function VocabListClient({
 }) {
   const [list, setList] = useState(words);
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`vocab-words:${deckId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tu_da_luu",
+          filter: `bo_tu_id=eq.${deckId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "DELETE") {
+            const deletedWord = payload.old as Pick<TuDaLuuRow, "id">;
+            setList((prev) => prev.filter((word) => word.id !== deletedWord.id));
+            return;
+          }
+
+          const changedWord = payload.new as TuDaLuuRow;
+          setList((prev) => {
+            const existingWord = prev.some((word) => word.id === changedWord.id);
+            const nextList = existingWord
+              ? prev.map((word) => (word.id === changedWord.id ? changedWord : word))
+              : [changedWord, ...prev];
+
+            return nextList.sort((firstWord, secondWord) =>
+              secondWord.tao_luc.localeCompare(firstWord.tao_luc),
+            );
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [deckId]);
 
   const filtered = search
     ? list.filter((w) => w.tu_goc.toLowerCase().includes(search.toLowerCase()))

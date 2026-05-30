@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+const POSTGRES_UUID_PATTERN = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
+function postgresUuid(message: string) {
+  return z.string().trim().regex(POSTGRES_UUID_PATTERN, message);
+}
+
 /**
  * Schema cho việc lưu một từ vựng mới.
  * Map 1-1 với cột bảng tu_da_luu trong DATABASE.md.
@@ -19,15 +25,15 @@ export const LuuTuVungSchema = z.object({
       z.object({
         en: z.string(),
         vi: z.string(),
-        nguon_id: z.string().uuid().optional(),
-        doan_id: z.string().uuid().optional(),
+        nguon_id: postgresUuid("ID nguồn không hợp lệ").optional(),
+        doan_id: postgresUuid("ID đoạn không hợp lệ").optional(),
       }),
     )
     .optional(),
   tu_dong_nghia: z.array(z.string()).optional(),
   cefr_phu_hop: z.enum(["A1", "A2", "B1", "B2", "C1", "C2"]).optional(),
-  bo_tu_id: z.string().uuid("ID bộ từ không hợp lệ").optional(),
-  nguon_id: z.string().uuid("ID nguồn không hợp lệ").optional(),
+  bo_tu_id: postgresUuid("ID bộ từ không hợp lệ").optional(),
+  nguon_id: postgresUuid("ID nguồn không hợp lệ").optional(),
   ngu_canh: z.string().max(512).optional(),
 });
 
@@ -61,7 +67,7 @@ export type CapNhatBoTuInput = z.infer<typeof CapNhatBoTuSchema>;
  * quality: 0=Lại, 1=Khó, 2=Tốt, 3=Dễ
  */
 export const GradeReviewSchema = z.object({
-  tu_id: z.string().uuid("ID từ không hợp lệ"),
+  tu_id: postgresUuid("ID từ không hợp lệ"),
   quality: z.union([z.literal(0), z.literal(1), z.literal(2), z.literal(3)], {
     error: "Grade phải là 0 (Lại), 1 (Khó), 2 (Tốt), hoặc 3 (Dễ)",
   }),
@@ -73,7 +79,7 @@ export type GradeReviewInput = z.infer<typeof GradeReviewSchema>;
  * Schema cho việc thêm từ hệ thống vào deck của user (UC12).
  */
 export const ThemBoTuHeThongSchema = z.object({
-  bo_tu_id: z.string().uuid("ID bộ từ không hợp lệ"),
+  bo_tu_id: postgresUuid("ID bộ từ không hợp lệ"),
 });
 
 export type ThemBoTuHeThongInput = z.infer<typeof ThemBoTuHeThongSchema>;
@@ -83,7 +89,7 @@ export type ThemBoTuHeThongInput = z.infer<typeof ThemBoTuHeThongSchema>;
  */
 export const TimKiemTuVungSchema = z.object({
   tu_khoa: z.string().max(64).optional(),
-  bo_tu_id: z.string().uuid().optional(),
+  bo_tu_id: postgresUuid("ID bộ từ không hợp lệ").optional(),
   trang_thai: z
     .enum(["moi", "dang_hoc", "on_tap", "thuoc"])
     .optional(),
