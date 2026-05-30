@@ -18,7 +18,7 @@ import type {
 
 export type BoTuRow = {
   id: string;
-  nguoi_dung_id: string;
+  nguoi_dung_id: string | null;
   ten: string;
   mo_ta: string | null;
   mau_bia: string | null;
@@ -39,7 +39,7 @@ export type ViDuItem = {
 
 export type TuDaLuuRow = {
   id: string;
-  nguoi_dung_id: string;
+  nguoi_dung_id: string | null;
   bo_tu_id: string | null;
   tu_goc: string;
   loai_tu: string | null;
@@ -84,6 +84,72 @@ async function layNguoiDungId(supabase: SupabaseClient): Promise<string> {
     throw new Error("Chưa đăng nhập");
   }
   return user.id;
+}
+
+function taoTuDaLuuPayload(nguoiDungId: string, input: LuuTuVungInput) {
+  return {
+    nguoi_dung_id: nguoiDungId,
+    tu_goc: input.tu_goc,
+    loai_tu: input.loai_tu,
+    phien_am: input.phien_am,
+    nghia_en: input.nghia_en,
+    nghia_vi: input.nghia_vi,
+    vi_du: input.vi_du,
+    tu_dong_nghia: input.tu_dong_nghia,
+    cefr_phu_hop: input.cefr_phu_hop,
+    bo_tu_id: input.bo_tu_id,
+    nguon_id: input.nguon_id,
+    ngu_canh: input.ngu_canh,
+  };
+}
+
+async function damBaoLichOnTap(
+  supabase: SupabaseClient,
+  tuId: string,
+  nguoiDungId: string,
+): Promise<void> {
+  const { data: lichOn, error: errLayLich } = await supabase
+    .from("lich_on_tap")
+    .select("id")
+    .eq("tu_id", tuId)
+    .maybeSingle();
+
+  if (errLayLich) throw errLayLich;
+  if (lichOn) return;
+
+  const { error: errTaoLich } = await supabase.from("lich_on_tap").insert({
+    tu_id: tuId,
+    nguoi_dung_id: nguoiDungId,
+    on_tap_ke_luc: new Date().toISOString(),
+  });
+
+  if (errTaoLich) throw errTaoLich;
+}
+
+async function capNhatSoTuBoTu(
+  supabase: SupabaseClient,
+  boTuIds: Array<string | null | undefined>,
+): Promise<void> {
+  const uniqueBoTuIds = [...new Set(boTuIds.filter((id): id is string => Boolean(id)))];
+
+  await Promise.all(
+    uniqueBoTuIds.map(async (boTuId) => {
+      const { count, error: errDem } = await supabase
+        .from("tu_da_luu")
+        .select("id", { count: "exact", head: true })
+        .eq("bo_tu_id", boTuId);
+
+      if (errDem) throw errDem;
+
+      const { error: errCapNhat } = await supabase
+        .from("bo_tu")
+        .update({ so_tu: count ?? 0 })
+        .eq("id", boTuId)
+        .eq("la_he_thong", false);
+
+      if (errCapNhat) throw errCapNhat;
+    }),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -219,36 +285,46 @@ export const vocabRepo = {
     input: LuuTuVungInput,
   ): Promise<TuDaLuuRow> {
     const nguoiDungId = await layNguoiDungId(supabase);
-    // 1. Insert tu_da_luu
+    const payload = taoTuDaLuuPayload(nguoiDungId, input);
+    const { data: tuDaCo, error: errLayTu } = await supabase
+      .from("tu_da_luu")
+      .select("*")
+      .eq("nguoi_dung_id", nguoiDungId)
+      .eq("tu_goc", input.tu_goc)
+      .maybeSingle();
+
+    if (errLayTu) throw errLayTu;
+
+    if (tuDaCo) {
+      const { data: tuCapNhat, error: errCapNhatTu } = await supabase
+        .from("tu_da_luu")
+        .update(payload)
+        .eq("id", tuDaCo.id)
+        .select()
+        .single();
+
+      if (errCapNhatTu) throw errCapNhatTu;
+
+      await Promise.all([
+        damBaoLichOnTap(supabase, tuCapNhat.id, nguoiDungId),
+        capNhatSoTuBoTu(supabase, [tuDaCo.bo_tu_id, input.bo_tu_id]),
+      ]);
+
+      return tuCapNhat as TuDaLuuRow;
+    }
+
     const { data: tu, error: errTu } = await supabase
       .from("tu_da_luu")
-      .insert({
-        nguoi_dung_id: nguoiDungId,
-        tu_goc: input.tu_goc,
-        loai_tu: input.loai_tu,
-        phien_am: input.phien_am,
-        nghia_en: input.nghia_en,
-        nghia_vi: input.nghia_vi,
-        vi_du: input.vi_du,
-        tu_dong_nghia: input.tu_dong_nghia,
-        cefr_phu_hop: input.cefr_phu_hop,
-        bo_tu_id: input.bo_tu_id,
-        nguon_id: input.nguon_id,
-        ngu_canh: input.ngu_canh,
-      })
+      .insert(payload)
       .select()
       .single();
 
     if (errTu) throw errTu;
 
-    // 2. Insert lich_on_tap (lên lịch ôn lần đầu = now)
-    const { error: errLich } = await supabase.from("lich_on_tap").insert({
-      tu_id: tu.id,
-      nguoi_dung_id: nguoiDungId,
-      on_tap_ke_luc: new Date().toISOString(),
-    });
-
-    if (errLich) throw errLich;
+    await Promise.all([
+      damBaoLichOnTap(supabase, tu.id, nguoiDungId),
+      capNhatSoTuBoTu(supabase, [input.bo_tu_id]),
+    ]);
 
     return tu as TuDaLuuRow;
   },
@@ -295,8 +371,10 @@ export const vocabRepo = {
    * Xoá từ.
    */
   async xoaTu(supabase: SupabaseClient, tuId: string): Promise<void> {
+    const tu = await this.layTu(supabase, tuId);
     const { error } = await supabase.from("tu_da_luu").delete().eq("id", tuId);
     if (error) throw error;
+    await capNhatSoTuBoTu(supabase, [tu?.bo_tu_id]);
   },
 
   /**
@@ -476,8 +554,6 @@ export const vocabRepo = {
       chu_de: boTu.chu_de ?? undefined,
     });
 
-    // Clone từng từ
-    const now = new Date().toISOString();
     const tuInserts = tuHeThong.map((tu) => ({
       nguoi_dung_id: (boTuMoi as BoTuRow).nguoi_dung_id,
       bo_tu_id: boTuMoi.id,

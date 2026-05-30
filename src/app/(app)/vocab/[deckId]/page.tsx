@@ -5,7 +5,7 @@ import { vocabRepo } from "@/lib/repositories/vocab.repo";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeftIcon, BookOpenIcon, PlusIcon, StarIcon } from "lucide-react";
+import { ArrowLeftIcon, BookOpenIcon, PlusIcon } from "lucide-react";
 import { VocabListClient } from "./_components/vocab-list-client";
 
 /**
@@ -86,7 +86,7 @@ export default async function DeckDetailPage({
           </CardContent>
         </Card>
       ) : (
-        <VocabListClient words={tuList} deckId={deckId} />
+        <VocabListClient key={deckId} words={tuList} deckId={deckId} />
       )}
     </div>
   );

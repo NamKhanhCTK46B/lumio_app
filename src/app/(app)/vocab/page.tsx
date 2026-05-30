@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { BookOpenIcon } from "lucide-react";
 import { TaoBoTuDialog } from "./_components/tao-bo-tu-dialog";
+import { VocabRealtimeRefresh } from "./_components/vocab-realtime-refresh";
 
 /**
  * Trang danh sách bộ từ vựng.
@@ -24,6 +25,7 @@ export default async function VocabPage() {
 
   return (
     <div className="mx-auto flex max-w-6xl flex-col gap-6">
+      <VocabRealtimeRefresh />
       {/* Header + hero */}
       <div className="flex flex-col gap-4">
         <div>
