@@ -24,8 +24,8 @@ export default async function ProfilePage({ searchParams }: Props) {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">Hồ sơ cá nhân</h1>
-        <p className="text-sm text-slate-700 dark:text-slate-300">
+        <h1 className="text-2xl font-semibold text-foreground">Hồ sơ cá nhân</h1>
+        <p className="text-sm text-muted-foreground">
           Quản lý thông tin hiển thị và tuỳ chỉnh học tập.
         </p>
       </header>
@@ -33,7 +33,7 @@ export default async function ProfilePage({ searchParams }: Props) {
       {ok ? (
         <div
           role="status"
-          className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-700"
+          className="rounded-lg border border-lm-success/30 bg-lm-success-soft px-4 py-3 text-sm text-lm-success-ink"
         >
           {decodeURIComponent(ok)}
         </div>
@@ -42,26 +42,26 @@ export default async function ProfilePage({ searchParams }: Props) {
       {error ? (
         <div
           role="alert"
-          className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
+          className="rounded-lg border border-lm-danger/30 bg-lm-danger-soft px-4 py-3 text-sm text-lm-danger-ink"
         >
           {decodeURIComponent(error)}
         </div>
       ) : null}
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6 dark:border-slate-800 dark:bg-slate-900">
-        <h2 className="mb-4 text-base font-medium text-slate-900 dark:text-slate-100">Ảnh đại diện</h2>
+      <section className="rounded-lg border border-border bg-card p-6 text-card-foreground">
+        <h2 className="mb-4 text-base font-medium text-card-foreground">Ảnh đại diện</h2>
         <AvatarUploader
           hientai_url={hoSo.url_avatar}
           ten_hien_thi={hoSo.ten_hien_thi ?? hoSo.email ?? ""}
         />
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6">
-        <h2 className="mb-4 text-base font-medium text-slate-900">Thông tin cá nhân</h2>
+      <section className="rounded-lg border border-border bg-card p-6 text-card-foreground">
+        <h2 className="mb-4 text-base font-medium text-card-foreground">Thông tin cá nhân</h2>
         <ProfileForm hoSo={hoSo} />
       </section>
 
-      <p className="text-xs text-slate-500">
+      <p className="text-xs text-muted-foreground">
         Email: <strong>{hoSo.email}</strong> · Để thay đổi email, liên hệ hỗ trợ.
       </p>
     </div>
