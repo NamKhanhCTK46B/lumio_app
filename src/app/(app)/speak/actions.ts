@@ -5,8 +5,10 @@ import { speakingRepo } from "@/lib/repositories/speaking.repo";
 import { revalidateTag } from "next/cache";
 import { z } from "zod";
 
+const POSTGRES_UUID_REGEX = /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 const TaoPhienSchema = z.object({
-  nhan_vat_id: z.string().uuid("ID nhân vật không hợp lệ"),
+  nhan_vat_id: z.string().regex(POSTGRES_UUID_REGEX, "ID nhân vật không hợp lệ"),
   boi_canh: z.string().max(256).optional(),
 });
 
@@ -16,7 +18,8 @@ const TaoPhienSchema = z.object({
 export async function taoPhienNoiAction(raw: unknown) {
   const parsed = TaoPhienSchema.safeParse(raw);
   if (!parsed.success) {
-    return { ok: false as const, error: parsed.error.message };
+    const msg = parsed.error.issues[0]?.message ?? "Dữ liệu tạo phiên không hợp lệ";
+    return { ok: false as const, error: msg };
   }
 
   try {

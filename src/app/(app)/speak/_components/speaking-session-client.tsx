@@ -1,11 +1,22 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { taoPhienNoiAction, ketThucPhienNoiAction } from "../actions";
 import { taoSttController, laCoHoTroStt, type SttResult } from "@/lib/speech/stt";
-import { taoTtsController, laCoHoTroTts } from "@/lib/speech/tts";
+import { taoTtsController, laCoHoTroTts, preloadVoices } from "@/lib/speech/tts";
+import {
+  findTopicByContext,
+  formatTopicContext,
+  getTopicGreeting,
+  getTopicsForCharacter,
+  getVoiceProfilesForCharacter,
+  pickVoiceProfileForSession,
+  type SpeakingTopic,
+  type SpeakingVoiceProfile,
+} from "@/lib/speaking/persona-config";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -16,19 +27,17 @@ type Turn = {
   noi_dung: string;
 };
 
-const SCENARIOS = [
-  "Ordering coffee",
-  "Job interview",
-  "Small talk at airport",
-  "Asking for directions",
-  "Doctor appointment",
-  "Free conversation",
-];
+type GoogleTtsResponse = {
+  audioBase64: string;
+  mimeType: string;
+};
 
 export function SpeakingSessionClient({
   nhanVatId,
   nhanVatTen,
   nhanVatAvatar,
+  nhanVatSlug,
+  nhanVatGiong,
   phienId,
   initialTurns,
   initialScenario,
@@ -36,64 +45,103 @@ export function SpeakingSessionClient({
   nhanVatId: string;
   nhanVatTen: string;
   nhanVatAvatar: string | null;
+  nhanVatSlug?: string | null;
+  nhanVatGiong?: string | null;
   phienId?: string;
   initialTurns?: Turn[];
   initialScenario?: string;
 }) {
+  const topics = useMemo(() => getTopicsForCharacter(nhanVatSlug), [nhanVatSlug]);
+  const voiceProfiles = useMemo(
+    () => getVoiceProfilesForCharacter(nhanVatSlug, nhanVatGiong),
+    [nhanVatGiong, nhanVatSlug],
+  );
+  const initialTopic = useMemo(
+    () => findTopicByContext(topics, initialScenario),
+    [initialScenario, topics],
+  );
   const hasExistingSession = !!phienId;
   const [sessionId, setSessionId] = useState(phienId ?? "");
   const [scenario, setScenario] = useState(initialScenario ?? "");
+  const [selectedTopicId, setSelectedTopicId] = useState(initialTopic?.id ?? "");
   const [started, setStarted] = useState(hasExistingSession);
   const [turns, setTurns] = useState<Turn[]>(initialTurns ?? []);
   const [inputText, setInputText] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [recordingText, setRecordingText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [startError, setStartError] = useState<string | null>(null);
   const [sttSupported] = useState(() => laCoHoTroStt());
   const [ttsSupported] = useState(() => laCoHoTroTts());
+  const selectedTopic = topics.find((topic) => topic.id === selectedTopicId) ?? null;
   const sttRef = useRef<ReturnType<typeof taoSttController> | null>(null);
   const ttsRef = useRef<ReturnType<typeof taoTtsController> | null>(null);
+  const activeAudioRef = useRef<HTMLAudioElement | null>(null);
+  const sessionVoiceProfileRef = useRef<SpeakingVoiceProfile | null>(null);
+  const sessionVoiceSeedRef = useRef<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const sendingRef = useRef(false);
+  const googleTtsToastShownRef = useRef(false);
+  const webTtsToastShownRef = useRef(false);
   const router = useRouter();
 
-  // Scroll to bottom on new messages
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [turns]);
 
-  // TTS controller
+  useEffect(() => {
+    sessionVoiceProfileRef.current = null;
+    sessionVoiceSeedRef.current = null;
+  }, [sessionId]);
+
   useEffect(() => {
     if (ttsSupported) {
       ttsRef.current = taoTtsController();
+      void preloadVoices();
     }
     return () => {
       ttsRef.current?.cancel();
+      activeAudioRef.current?.pause();
     };
   }, [ttsSupported]);
 
   async function startSession() {
-    if (!scenario && !hasExistingSession) return;
+    setStartError(null);
+
+    if (!selectedTopic && !hasExistingSession) {
+      setStartError("Vui lòng chọn chủ đề trước khi bắt đầu.");
+      return;
+    }
+
     if (hasExistingSession) {
       setStarted(true);
       return;
     }
 
     setIsLoading(true);
-    const result = await taoPhienNoiAction({
-      nhan_vat_id: nhanVatId,
-      boi_canh: scenario,
-    });
-    setIsLoading(false);
 
-    if (result.ok) {
-      setSessionId(result.data!.phien_id);
-      setStarted(true);
-      const greeting = getGreeting(nhanVatTen, scenario);
-      setTurns([{ vai: "ai", noi_dung: greeting }]);
-      if (ttsRef.current) {
-        ttsRef.current.speak(greeting).catch(() => {});
+    try {
+      const topicContext = formatTopicContext(selectedTopic as SpeakingTopic);
+      const result = await taoPhienNoiAction({
+        nhan_vat_id: nhanVatId,
+        boi_canh: topicContext,
+      });
+
+      if (!result.ok) {
+        setStartError(result.error);
+        return;
       }
+
+      const newSessionId = result.data.phien_id;
+      const greeting = getTopicGreeting(nhanVatTen, selectedTopic as SpeakingTopic);
+      setSessionId(newSessionId);
+      setScenario(topicContext);
+      setStarted(true);
+      setTurns([{ vai: "ai", noi_dung: greeting }]);
+      void speakAiText(greeting, newSessionId);
+      router.push(`/speak/${newSessionId}`);
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -103,7 +151,7 @@ export function SpeakingSessionClient({
     await ketThucPhienNoiAction(sessionId, {
       tongLuot: turns.length,
       diemPhatAmTb: null,
-      tomTat: `Phiên ${nhanVatTen} - ${scenario}`,
+      tomTat: `Phiên ${nhanVatTen} - ${scenario || "Tự do"}`,
     });
 
     router.push("/speak");
@@ -139,26 +187,17 @@ export function SpeakingSessionClient({
       const reader = response.body?.getReader();
       if (!reader) throw new Error("No response body");
 
-      const decoder = new TextDecoder();
-      let aiText = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = decoder.decode(value, { stream: true });
-        aiText += chunk;
+      const aiText = await readStreamText(reader, (chunkText) => {
         setTurns((prev) => {
           const last = prev[prev.length - 1];
           if (last?.vai === "ai") {
-            return [...prev.slice(0, -1), { ...last, noi_dung: aiText }];
+            return [...prev.slice(0, -1), { ...last, noi_dung: chunkText }];
           }
           return prev;
         });
-      }
+      });
 
-      if (ttsRef.current) {
-        ttsRef.current.speak(aiText).catch(() => {});
-      }
+      void speakAiText(aiText, sessionId);
     } catch (err) {
       console.error("Send message error:", err);
       setTurns((prev) => {
@@ -172,6 +211,86 @@ export function SpeakingSessionClient({
       sendingRef.current = false;
       setIsLoading(false);
     }
+  }
+
+  function getSessionVoiceProfile(activeSessionId: string): SpeakingVoiceProfile {
+    if (!sessionVoiceProfileRef.current || sessionVoiceSeedRef.current !== activeSessionId) {
+      sessionVoiceProfileRef.current = pickVoiceProfileForSession(
+        voiceProfiles,
+        `${nhanVatId}:${activeSessionId}`,
+      );
+      sessionVoiceSeedRef.current = activeSessionId;
+    }
+    return sessionVoiceProfileRef.current;
+  }
+
+  async function speakAiText(text: string, activeSessionId: string) {
+    const voice = getSessionVoiceProfile(activeSessionId);
+
+    try {
+      await playGoogleTts(text, voice);
+      return;
+    } catch (err) {
+      console.warn("Google TTS fallback:", err);
+      notifyGoogleTtsFallback();
+    }
+
+    try {
+      await playBrowserTts(text, voice);
+    } catch (err) {
+      console.warn("Browser TTS error:", err);
+      notifyBrowserTtsFailure();
+    }
+  }
+
+  async function playGoogleTts(text: string, voice: SpeakingVoiceProfile) {
+    const response = await fetch("/api/speech/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        text,
+        lang: voice.lang,
+        voiceName: voice.voiceName,
+        speakingRate: voice.speakingRate,
+        pitch: voice.pitch,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Google TTS error: ${response.status}`);
+    }
+
+    const data = (await response.json()) as GoogleTtsResponse;
+    activeAudioRef.current?.pause();
+    const audio = new Audio(`data:${data.mimeType};base64,${data.audioBase64}`);
+    activeAudioRef.current = audio;
+    await audio.play();
+  }
+
+  async function playBrowserTts(text: string, voice: SpeakingVoiceProfile) {
+    if (!ttsRef.current?.isSupported) {
+      throw new Error("Browser TTS not supported");
+    }
+
+    await preloadVoices();
+    await ttsRef.current.speak(text, {
+      lang: voice.lang,
+      rate: voice.speakingRate,
+      pitch: googlePitchToBrowserPitch(voice.pitch),
+      useDefaultVoice: true,
+    });
+  }
+
+  function notifyGoogleTtsFallback() {
+    if (googleTtsToastShownRef.current) return;
+    googleTtsToastShownRef.current = true;
+    toast.warning("Không tạo được giọng Google Cloud. Lumio sẽ dùng giọng mặc định của trình duyệt.");
+  }
+
+  function notifyBrowserTtsFailure() {
+    if (webTtsToastShownRef.current) return;
+    webTtsToastShownRef.current = true;
+    toast.error("Trình duyệt không phát được giọng đọc. Bạn vẫn có thể tiếp tục luyện nói.");
   }
 
   function startRecording() {
@@ -204,7 +323,6 @@ export function SpeakingSessionClient({
 
   return (
     <div className="flex flex-col h-[calc(100vh-8rem)]">
-      {/* Header */}
       <div className="flex items-center gap-3 pb-4 border-b">
         <Link href="/speak">
           <Button variant="ghost" size="icon">
@@ -227,34 +345,55 @@ export function SpeakingSessionClient({
         )}
       </div>
 
-      {/* Pre-session: scenario picker */}
       {!started && (
         <div className="flex-1 flex items-center justify-center">
-          <Card className="max-w-md w-full">
+          <Card className="max-w-2xl w-full">
             <CardContent className="pt-6 space-y-4">
-              <p className="text-center text-sm text-muted-foreground">
-                {hasExistingSession ? "Tiếp tục phiên cũ" : "Chọn tình huống để bắt đầu:"}
-              </p>
+              <div className="space-y-1 text-center">
+                <p className="text-sm font-medium text-lm-fg">
+                  {hasExistingSession ? "Tiếp tục phiên cũ" : `Chọn chủ đề phù hợp với vai của ${nhanVatTen}`}
+                </p>
+                {!hasExistingSession ? (
+                  <p className="text-xs text-lm-fg-muted">
+                    Mỗi chủ đề sẽ điều chỉnh bối cảnh hội thoại và giọng đọc của nhân vật.
+                  </p>
+                ) : null}
+              </div>
               {!hasExistingSession && (
-                <div className="grid grid-cols-2 gap-2">
-                  {SCENARIOS.map((s) => (
+                <div className="grid gap-2 sm:grid-cols-3">
+                  {topics.map((topic) => (
                     <button
-                      key={s}
-                      onClick={() => setScenario(s)}
-                      className={`rounded-lg border px-3 py-2 text-sm text-left transition-all ${
-                        scenario === s
-                          ? "border-primary bg-lm-primary-soft text-primary"
-                          : "border-border hover:border-primary/50"
+                      key={topic.id}
+                      type="button"
+                      onClick={() => {
+                        setSelectedTopicId(topic.id);
+                        setScenario(formatTopicContext(topic));
+                      }}
+                      className={`rounded-xl border px-3 py-3 text-left transition-all ${
+                        selectedTopicId === topic.id
+                          ? "border-lm-primary bg-lm-primary-soft text-lm-primary-ink"
+                          : "border-lm-border hover:border-lm-primary/50"
                       }`}
                     >
-                      {s}
+                      <span className="block text-sm font-semibold">{topic.title}</span>
+                      <span className="mt-1 block text-xs text-lm-fg-muted">{topic.description}</span>
+                      {topic.cefr ? (
+                        <span className="mt-2 inline-flex rounded-full bg-lm-bg-elev-1 px-2 py-0.5 text-2xs text-lm-fg-muted">
+                          {topic.cefr}
+                        </span>
+                      ) : null}
                     </button>
                   ))}
                 </div>
               )}
+              {startError ? (
+                <p className="rounded-lg border border-lm-danger/30 bg-lm-danger-soft px-3 py-2 text-sm text-lm-danger-ink">
+                  {startError}
+                </p>
+              ) : null}
               <Button
                 className="w-full"
-                disabled={(!scenario && !hasExistingSession) || isLoading}
+                disabled={(!selectedTopic && !hasExistingSession) || isLoading}
                 onClick={startSession}
               >
                 {isLoading ? "Đang bắt đầu..." : hasExistingSession ? "Tiếp tục" : "Bắt đầu luyện nói"}
@@ -264,7 +403,6 @@ export function SpeakingSessionClient({
         </div>
       )}
 
-      {/* Chat */}
       {started && (
         <>
           <div className="flex-1 overflow-y-auto space-y-4 py-4">
@@ -287,9 +425,10 @@ export function SpeakingSessionClient({
                   }`}
                 >
                   <p>{turn.noi_dung}</p>
-                  {turn.vai === "ai" && turn.noi_dung && ttsSupported && (
+                  {turn.vai === "ai" && turn.noi_dung && (
                     <button
-                      onClick={() => ttsRef.current?.speak(turn.noi_dung)}
+                      type="button"
+                      onClick={() => sessionId && speakAiText(turn.noi_dung, sessionId)}
                       className="mt-1 flex items-center gap-1 text-xs opacity-70 hover:opacity-100"
                     >
                       <Volume2Icon className="h-3 w-3" />
@@ -316,7 +455,6 @@ export function SpeakingSessionClient({
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
           <div className="border-t pt-4 space-y-2">
             {recordingText && (
               <p className="text-sm text-primary animate-pulse px-1">
@@ -368,14 +506,26 @@ export function SpeakingSessionClient({
   );
 }
 
-function getGreeting(name: string, scenario: string): string {
-  const greetings: Record<string, string> = {
-    "Ordering coffee": `Hi there! What can I get for you today?`,
-    "Job interview": `Hello! Thanks for coming in. Let's start with you telling me about yourself.`,
-    "Small talk at airport": `Oh, what a coincidence! Are you heading to the same flight?`,
-    "Asking for directions": `Excuse me, could you help me? I'm a bit lost.`,
-    "Doctor appointment": `Good morning! Please, take a seat. What brings you in today?`,
-    "Free conversation": `Hey! Nice to meet you. What have you been up to lately?`,
-  };
-  return greetings[scenario] ?? `Hi! I'm ${name}. What would you like to talk about?`;
+async function readStreamText(
+  reader: ReadableStreamDefaultReader<Uint8Array>,
+  onText: (text: string) => void,
+): Promise<string> {
+  const decoder = new TextDecoder();
+  const chunks: string[] = [];
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(decoder.decode(value, { stream: true }));
+    onText(chunks.join(""));
+  }
+
+  chunks.push(decoder.decode());
+  const text = chunks.join("");
+  onText(text);
+  return text;
+}
+
+function googlePitchToBrowserPitch(pitch: number): number {
+  return Math.min(2, Math.max(0.1, 1 + pitch / 20));
 }

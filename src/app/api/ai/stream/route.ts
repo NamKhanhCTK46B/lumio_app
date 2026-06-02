@@ -69,6 +69,7 @@ async function handleRoleplay(input: z.infer<typeof RoleplaySchema>) {
         characterName: nhanVat.ten,
         characterPrompt: nhanVat.prompt_nhan_vat,
         cefrToiThieu: nhanVat.cefr_toi_thieu,
+        scenario: phien.boi_canh,
       }),
       nguoi_dung: `${historyText}\n\n${roleplayUserPrompt(input.userTranscript)}`,
     });
