@@ -1,41 +1,40 @@
 import { dangKyAction } from "../actions";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
-/**
- * Form đăng ký tài khoản. Server Component — submit qua Server Action,
- * không cần client state. Validation rendering xảy ra ở server (qua
- * redirect ?error=...).
- */
 export function SignupForm() {
   return (
-    <form action={dangKyAction} className="flex flex-col gap-3">
-      <label className="block text-sm">
-        <span className="mb-1 block text-slate-700">Tên hiển thị</span>
-        <input
+    <form action={dangKyAction} className="flex flex-col gap-4">
+      <div className="space-y-2">
+        <Label htmlFor="signup-name">Tên hiển thị</Label>
+        <Input
+          id="signup-name"
           type="text"
           name="ten_hien_thi"
           required
           maxLength={64}
           autoComplete="name"
           placeholder="Vd. Nguyễn Văn A"
-          className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
         />
-      </label>
+      </div>
 
-      <label className="block text-sm">
-        <span className="mb-1 block text-slate-700">Email</span>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="signup-email">Email</Label>
+        <Input
+          id="signup-email"
           type="email"
           name="email"
           required
           autoComplete="email"
           placeholder="ban@email.com"
-          className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
         />
-      </label>
+      </div>
 
-      <label className="block text-sm">
-        <span className="mb-1 block text-slate-700">Mật khẩu</span>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="signup-password">Mật khẩu</Label>
+        <Input
+          id="signup-password"
           type="password"
           name="password"
           required
@@ -43,16 +42,16 @@ export function SignupForm() {
           maxLength={72}
           autoComplete="new-password"
           placeholder="Tối thiểu 8 ký tự, gồm chữ và số"
-          className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
         />
-        <span className="mt-1 block text-xs text-slate-500">
+        <p className="text-xs text-lm-fg-muted">
           Yêu cầu: tối thiểu 8 ký tự, có chữ cái và số.
-        </span>
-      </label>
+        </p>
+      </div>
 
-      <label className="block text-sm">
-        <span className="mb-1 block text-slate-700">Nhập lại mật khẩu</span>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="signup-password-confirm">Nhập lại mật khẩu</Label>
+        <Input
+          id="signup-password-confirm"
           type="password"
           name="password_confirm"
           required
@@ -60,16 +59,12 @@ export function SignupForm() {
           maxLength={72}
           autoComplete="new-password"
           placeholder="Nhập lại mật khẩu vừa rồi"
-          className="h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
         />
-      </label>
+      </div>
 
-      <button
-        type="submit"
-        className="mt-2 h-11 rounded-md bg-amber-500 text-sm font-medium text-white transition hover:bg-amber-600"
-      >
+      <Button type="submit" size="lg" className="mt-1 h-11">
         Tạo tài khoản
-      </button>
+      </Button>
     </form>
   );
 }

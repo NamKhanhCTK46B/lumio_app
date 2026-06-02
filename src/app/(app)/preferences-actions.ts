@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import {
   COOKIE_LOCALE,
+  COOKIE_OPTS,
   COOKIE_THEME,
   laLocaleHopLe,
   laThemeHopLe,
@@ -20,16 +21,6 @@ import {
  * Pattern dual-storage: cookie ưu tiên (đọc ngay request hiện tại),
  * ho_so là persistent backup. Sync 1 chiều: cookie → ho_so khi login.
  */
-
-const COOKIE_OPTS = {
-  // 1 năm — đủ lâu để user không phải đổi lại thường xuyên.
-  maxAge: 60 * 60 * 24 * 365,
-  // HTTP-only false vì server-side đọc + client (next-themes) cũng cần.
-  // KHÔNG chứa thông tin nhạy cảm nên an toàn để JS đọc.
-  httpOnly: false,
-  sameSite: "lax" as const,
-  path: "/",
-};
 
 export async function doiNgonNguAction(formData: FormData): Promise<void> {
   const locale = laLocaleHopLe(String(formData.get("locale") ?? ""));

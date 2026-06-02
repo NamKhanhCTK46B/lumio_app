@@ -1,8 +1,10 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
+import { COOKIE_OPTS, COOKIE_THEME } from "@/i18n/config";
 
 /**
  * UC6 (cuối onboarding) — lưu sở thích cơ bản + đánh dấu hoàn tất onboard.
@@ -41,6 +43,9 @@ export async function luuSoThichVaHoanTatAction(formData: FormData): Promise<voi
     .eq("id", user.id);
 
   if (error) throw new Error(`Không cập nhật được hồ sơ: ${error.message}`);
+
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_THEME, parsed.data.chu_de_giao_dien, COOKIE_OPTS);
 
   redirect("/dashboard");
 }
