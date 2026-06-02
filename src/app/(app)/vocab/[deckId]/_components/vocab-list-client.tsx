@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { toggleDanhDauAction, xoaTuAction } from "../../actions";
 import { createClient } from "@/lib/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,6 +26,7 @@ export function VocabListClient({
 }) {
   const [list, setList] = useState(words);
   const [search, setSearch] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
@@ -42,6 +44,7 @@ export function VocabListClient({
           if (payload.eventType === "DELETE") {
             const deletedWord = payload.old as Pick<TuDaLuuRow, "id">;
             setList((prev) => prev.filter((word) => word.id !== deletedWord.id));
+            router.refresh();
             return;
           }
 
@@ -56,6 +59,7 @@ export function VocabListClient({
               secondWord.tao_luc.localeCompare(firstWord.tao_luc),
             );
           });
+          router.refresh();
         },
       )
       .subscribe();
@@ -63,7 +67,7 @@ export function VocabListClient({
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [deckId]);
+  }, [deckId, router]);
 
   const filtered = search
     ? list.filter((w) => w.tu_goc.toLowerCase().includes(search.toLowerCase()))
@@ -85,6 +89,7 @@ export function VocabListClient({
     const result = await xoaTuAction(tuId);
     if (result.ok) {
       setList((prev) => prev.filter((w) => w.id !== tuId));
+      router.refresh();
     }
   }
 

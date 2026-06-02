@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { luuTuVungAction } from "../../actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeftIcon } from "lucide-react";
 
@@ -34,50 +36,45 @@ export default async function AddVocabWordPage({
           <form action={themTuFormAction.bind(null, deckId)} className="space-y-4">
             <label className="block space-y-1 text-sm">
               <span className="font-medium">Từ gốc</span>
-              <input
+              <Input
                 name="tu_goc"
                 required
                 maxLength={128}
                 placeholder="VD: sophisticated"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block space-y-1 text-sm">
                 <span className="font-medium">Loại từ</span>
-                <input
+                <Input
                   name="loai_tu"
                   maxLength={32}
                   placeholder="adjective"
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
               <label className="block space-y-1 text-sm">
                 <span className="font-medium">Phiên âm</span>
-                <input
+                <Input
                   name="phien_am"
                   maxLength={128}
                   placeholder="/səˈfɪstɪkeɪtɪd/"
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
             </div>
             <label className="block space-y-1 text-sm">
               <span className="font-medium">Nghĩa tiếng Việt</span>
-              <input
+              <Input
                 name="nghia_vi"
                 maxLength={512}
                 placeholder="tinh tế, phức tạp"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
             <label className="block space-y-1 text-sm">
               <span className="font-medium">Ví dụ</span>
-              <textarea
+              <Textarea
                 name="vi_du"
                 rows={3}
                 placeholder="She has a sophisticated understanding of culture."
-                className="w-full resize-y rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
             <Button type="submit">Lưu từ</Button>

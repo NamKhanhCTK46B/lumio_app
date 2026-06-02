@@ -19,6 +19,15 @@ function revalidateVocabTag(nguoiDungId: string | null) {
   revalidateTag(`vocab:nguoi_dung:${nguoiDungId}`, "max");
 }
 
+function revalidateVocabViews(nguoiDungId: string | null, boTuId?: string | null) {
+  revalidatePath("/vocab");
+  revalidatePath("/dashboard");
+  if (boTuId) {
+    revalidatePath(`/vocab/${boTuId}`);
+  }
+  revalidateVocabTag(nguoiDungId);
+}
+
 // ---------------------------------------------------------------------------
 // Lưu từ vựng
 // ---------------------------------------------------------------------------
@@ -38,11 +47,7 @@ export async function luuTuVungAction(raw: unknown) {
   try {
     const supabase = await createClient();
     const tu = await vocabRepo.luuTu(supabase, parsed.data);
-    revalidatePath("/vocab");
-    if (parsed.data.bo_tu_id) {
-      revalidatePath(`/vocab/${parsed.data.bo_tu_id}`);
-    }
-    revalidateVocabTag(tu.nguoi_dung_id);
+    revalidateVocabViews(tu.nguoi_dung_id, tu.bo_tu_id);
     return { ok: true as const, data: tu };
   } catch (err) {
     console.error("Lỗi khi lưu từ vựng", err);
@@ -67,8 +72,7 @@ export async function taoBoTuAction(raw: unknown) {
   try {
     const supabase = await createClient();
     const boTu = await vocabRepo.taoBoTu(supabase, parsed.data);
-    revalidatePath("/vocab");
-    revalidateVocabTag(boTu.nguoi_dung_id);
+    revalidateVocabViews(boTu.nguoi_dung_id, boTu.id);
     return { ok: true as const, data: boTu };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Lỗi khi tạo bộ từ";
@@ -88,9 +92,7 @@ export async function capNhatBoTuAction(boTuId: string, raw: unknown) {
   try {
     const supabase = await createClient();
     const boTu = await vocabRepo.capNhatBoTu(supabase, boTuId, parsed.data);
-    revalidatePath("/vocab");
-    revalidatePath(`/vocab/${boTuId}`);
-    revalidateVocabTag(boTu.nguoi_dung_id);
+    revalidateVocabViews(boTu.nguoi_dung_id, boTuId);
     return { ok: true as const, data: boTu };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Lỗi khi cập nhật bộ từ";
@@ -106,8 +108,7 @@ export async function xoaBoTuAction(boTuId: string) {
     const supabase = await createClient();
     const boTu = await vocabRepo.layBoTu(supabase, boTuId);
     await vocabRepo.xoaBoTu(supabase, boTuId);
-    revalidatePath("/vocab");
-    revalidateVocabTag(boTu?.nguoi_dung_id ?? null);
+    revalidateVocabViews(boTu?.nguoi_dung_id ?? null, boTuId);
     return { ok: true as const };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Lỗi khi xoá bộ từ";
@@ -205,7 +206,7 @@ export async function gradeReviewAction(raw: GradeReviewInput) {
       },
     });
 
-    revalidateVocabTag(tu.nguoi_dung_id);
+    revalidateVocabViews(tu.nguoi_dung_id, tu.bo_tu_id);
 
     return {
       ok: true as const,
@@ -240,7 +241,7 @@ export async function themBoTuHeThongAction(raw: unknown) {
       supabase,
       parsed.data.bo_tu_id,
     );
-    revalidatePath("/vocab");
+    revalidateVocabViews(null);
     return { ok: true as const, data: result };
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Lỗi khi thêm bộ từ";
@@ -317,8 +318,13 @@ export async function toggleDanhDauAction(tuId: string) {
 export async function xoaTuAction(tuId: string) {
   try {
     const supabase = await createClient();
+    const tu = await vocabRepo.layTu(supabase, tuId);
+    if (!tu) {
+      return { ok: false as const, error: "Không tìm thấy từ" };
+    }
+
     await vocabRepo.xoaTu(supabase, tuId);
-    revalidatePath("/vocab");
+    revalidateVocabViews(tu.nguoi_dung_id, tu.bo_tu_id);
     return { ok: true as const };
   } catch (err) {
     console.error("Lỗi khi xoá từ vựng", err);

@@ -7,6 +7,7 @@ import {
 } from "@/lib/repositories/bai_viet.repo";
 import { taoNhapAction } from "./actions";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 
 /**
@@ -139,13 +140,12 @@ export default async function WriteIndexPage({
             <h2 className="lm-h4">Hoặc viết theo đề tự do</h2>
             <form action={taoNhapAction} className="space-y-3">
               <input type="hidden" name="loai_de" value="tu_do" />
-              <textarea
+              <Textarea
                 name="de_bai_tu_do"
                 placeholder="Nhập đề bài bạn muốn viết..."
                 rows={3}
                 required
                 minLength={10}
-                className="w-full rounded-lg border border-lm-border bg-lm-bg-elev-1 px-3 py-2 text-sm"
               />
               <Button type="submit">Bắt đầu</Button>
             </form>

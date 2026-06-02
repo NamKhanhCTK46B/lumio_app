@@ -1,6 +1,24 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import type { SupabaseClient } from "@supabase/supabase-js";
+
+function laLoiRefreshTokenKhongHopLe(error: unknown) {
+  const authError = error as { code?: string; message?: string };
+  const message = authError.message ?? (error instanceof Error ? error.message : "");
+
+  return (
+    authError.code === "refresh_token_not_found" ||
+    message.includes("Invalid Refresh Token") ||
+    message.includes("Refresh Token Not Found")
+  );
+}
+
+function xoaCookieAuthSupabase(response: NextResponse, request: NextRequest) {
+  for (const cookie of request.cookies.getAll()) {
+    if (cookie.name.startsWith("sb-") || cookie.name.includes("auth-token")) {
+      response.cookies.delete(cookie.name);
+    }
+  }
+}
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -33,7 +51,17 @@ export async function updateSession(request: NextRequest) {
   // IMPORTANT: Avoid writing any logic between createServerClient and
   // supabase.auth.getUser(). A simple mistake could make it very hard to debug
   // issues with users being randomly logged out.
-  await (supabase.auth as { getUser: () => Promise<{ data: { user: unknown }; error: unknown }> }).getUser();
+  try {
+    await supabase.auth.getUser();
+  } catch (error) {
+    if (!laLoiRefreshTokenKhongHopLe(error)) {
+      throw error;
+    }
+
+    const response = NextResponse.next({ request });
+    xoaCookieAuthSupabase(response, request);
+    return response;
+  }
 
   return supabaseResponse;
 }

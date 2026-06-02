@@ -19,9 +19,10 @@ export default async function DeckDetailPage({
   const { deckId } = await params;
   const supabase = await createClient();
 
-  const [deck, tuList] = await Promise.all([
+  const [deck, tuList, soTuTrongBo] = await Promise.all([
     vocabRepo.layBoTu(supabase, deckId),
     vocabRepo.danhSachTu(supabase, deckId),
+    vocabRepo.demTuTrongBo(supabase, deckId),
   ]);
 
   if (!deck) notFound();
@@ -61,7 +62,7 @@ export default async function DeckDetailPage({
       <div className="flex flex-wrap gap-2">
         {deck.chu_de && <Badge variant="outline">{deck.chu_de}</Badge>}
         {deck.la_he_thong && <Badge variant="secondary">Bộ hệ thống</Badge>}
-        <Badge variant="outline">{tuList.length} từ</Badge>
+        <Badge variant="outline">{soTuTrongBo} từ</Badge>
         {deck.cefr_phu_hop && (
           <Badge
             className="text-white"
