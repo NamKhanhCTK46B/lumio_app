@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { UserMenu } from "./user-menu";
-import { PreferencesMenu } from "./preferences-menu";
+import { PreferencesMenu, ThemeToggle } from "./preferences-menu";
 import { NotificationBell } from "./notification-bell";
 import type { Locale, Theme } from "@/i18n/config";
 
@@ -41,6 +41,7 @@ export function Header({
           <h1 className="text-lg font-semibold text-lm-fg">{meta.title}</h1>
         </div>
         <div className="ml-auto flex items-center gap-2">
+          <ThemeToggle current_theme={current_theme} />
           <Link href="/notifications" className="inline-flex">
             <NotificationBell />
           </Link>

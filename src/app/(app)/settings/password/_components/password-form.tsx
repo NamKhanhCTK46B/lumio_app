@@ -1,60 +1,54 @@
 import { doiMatKhauAction } from "../actions";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
-/** Form đổi mật khẩu — 3 input + submit. */
 export function PasswordForm() {
   return (
     <form action={doiMatKhauAction} className="flex flex-col gap-4">
-      <label className="block text-sm">
-        <span className="mb-1 block text-slate-700">Mật khẩu hiện tại</span>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="current_password">Mật khẩu hiện tại</Label>
+        <Input
+          id="current_password"
           type="password"
           name="current_password"
           required
           autoComplete="current-password"
-          className={inputCls}
         />
-      </label>
+      </div>
 
-      <label className="block text-sm">
-        <span className="mb-1 block text-slate-700">Mật khẩu mới</span>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="new_password">Mật khẩu mới</Label>
+        <Input
+          id="new_password"
           type="password"
           name="new_password"
           required
           minLength={8}
           maxLength={72}
           autoComplete="new-password"
-          className={inputCls}
         />
-        <span className="mt-1 block text-xs text-slate-500">
+        <p className="text-xs text-lm-fg-muted">
           Tối thiểu 8 ký tự, có chữ cái và số. Phải khác mật khẩu hiện tại.
-        </span>
-      </label>
+        </p>
+      </div>
 
-      <label className="block text-sm">
-        <span className="mb-1 block text-slate-700">Nhập lại mật khẩu mới</span>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="new_password_confirm">Nhập lại mật khẩu mới</Label>
+        <Input
+          id="new_password_confirm"
           type="password"
           name="new_password_confirm"
           required
           minLength={8}
           maxLength={72}
           autoComplete="new-password"
-          className={inputCls}
         />
-      </label>
+      </div>
 
       <div className="flex justify-end">
-        <button
-          type="submit"
-          className="h-10 rounded-md bg-amber-500 px-6 text-sm font-medium text-white transition hover:bg-amber-600"
-        >
-          Đổi mật khẩu
-        </button>
+        <Button type="submit">Đổi mật khẩu</Button>
       </div>
     </form>
   );
 }
-
-const inputCls =
-  "h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200";

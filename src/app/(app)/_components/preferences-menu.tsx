@@ -1,6 +1,8 @@
 "use client";
 
+import { useTransition } from "react";
 import { useEffect, useRef, useState } from "react";
+import { useTheme } from "next-themes";
 import { Languages, Monitor, Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { doiNgonNguAction, doiThemeAction } from "../preferences-actions";
@@ -29,6 +31,45 @@ const THEME_OPTIONS: Array<{
   { value: "dark", Icon: Moon, key: "theme_dark" },
   { value: "system", Icon: Monitor, key: "theme_system" },
 ];
+
+export function ThemeToggle({ current_theme }: { current_theme: Theme }) {
+  const t = useTranslations("settings");
+  const { setTheme } = useTheme();
+  const [activeTheme, setActiveTheme] = useState(current_theme);
+  const [pending, startTransition] = useTransition();
+
+  function doiThemeNhanh(value: Theme) {
+    setActiveTheme(value);
+    setTheme(value);
+    const formData = new FormData();
+    formData.set("theme", value);
+    startTransition(() => {
+      void doiThemeAction(formData);
+    });
+  }
+
+  return (
+    <div className="hidden rounded-lg border border-lm-border bg-lm-bg-elev-1 p-0.5 sm:flex">
+      {THEME_OPTIONS.map(({ value, Icon, key }) => (
+        <button
+          key={value}
+          type="button"
+          aria-label={t(key)}
+          title={t(key)}
+          disabled={pending}
+          onClick={() => doiThemeNhanh(value)}
+          className={`inline-flex h-8 w-8 items-center justify-center rounded-md transition disabled:opacity-60 ${
+            activeTheme === value
+              ? "bg-lm-primary-soft text-lm-primary-ink"
+              : "text-lm-fg-muted hover:bg-lm-bg-muted hover:text-lm-fg"
+          }`}
+        >
+          <Icon className="h-4 w-4" />
+        </button>
+      ))}
+    </div>
+  );
+}
 
 export function PreferencesMenu({ current_theme, current_locale }: Props) {
   const t = useTranslations("settings");

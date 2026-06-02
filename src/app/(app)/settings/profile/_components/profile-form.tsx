@@ -1,12 +1,9 @@
 import { capNhatHoSoAction } from "../actions";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { NativeSelect } from "@/components/ui/native-select";
 
-/**
- * Form chỉnh sửa hồ sơ. Server Component — submit qua Server Action.
- * Pre-fill từ `hoSo` truyền vào prop.
- *
- * Trường `trinh_do_cefr` KHÔNG cho user tự sửa — chỉ set bởi placement
- * test (UC1) hoặc dashboard. Show readonly cho minh bạch.
- */
 type Props = {
   hoSo: {
     ten_hien_thi: string | null;
@@ -22,8 +19,12 @@ type Props = {
 export function ProfileForm({ hoSo }: Props) {
   return (
     <form action={capNhatHoSoAction} className="flex flex-col gap-4">
-      <FieldRow label="Tên hiển thị" htmlFor="ten_hien_thi" required>
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="ten_hien_thi">
+          Tên hiển thị
+          <span className="ml-0.5 text-lm-danger">*</span>
+        </Label>
+        <Input
           id="ten_hien_thi"
           type="text"
           name="ten_hien_thi"
@@ -31,12 +32,12 @@ export function ProfileForm({ hoSo }: Props) {
           required
           maxLength={64}
           autoComplete="name"
-          className={inputCls}
         />
-      </FieldRow>
+      </div>
 
-      <FieldRow label="Số điện thoại" htmlFor="so_dien_thoai">
-        <input
+      <div className="space-y-2">
+        <Label htmlFor="so_dien_thoai">Số điện thoại</Label>
+        <Input
           id="so_dien_thoai"
           type="tel"
           name="so_dien_thoai"
@@ -44,53 +45,51 @@ export function ProfileForm({ hoSo }: Props) {
           maxLength={20}
           autoComplete="tel"
           placeholder="+84 9xx xxx xxx"
-          className={inputCls}
         />
-      </FieldRow>
+      </div>
 
-      <FieldRow label="Trình độ hiện tại" hint="Cập nhật bởi placement test">
-        <input
+      <div className="space-y-2">
+        <Label>Trình độ hiện tại</Label>
+        <Input
           type="text"
           value={hoSo.trinh_do_cefr ?? "—"}
           readOnly
-          className={`${inputCls} cursor-not-allowed bg-slate-100`}
+          disabled
         />
-      </FieldRow>
+        <p className="text-xs text-lm-fg-muted">Cập nhật bởi placement test</p>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FieldRow label="Ngôn ngữ giao diện" htmlFor="ngon_ngu_giao_dien">
-          <select
+        <div className="space-y-2">
+          <Label htmlFor="ngon_ngu_giao_dien">Ngôn ngữ giao diện</Label>
+          <NativeSelect
             id="ngon_ngu_giao_dien"
             name="ngon_ngu_giao_dien"
             defaultValue={hoSo.ngon_ngu_giao_dien ?? "vi"}
-            className={inputCls}
           >
             <option value="vi">Tiếng Việt</option>
             <option value="en">English</option>
-          </select>
-        </FieldRow>
+          </NativeSelect>
+        </div>
 
-        <FieldRow label="Giao diện" htmlFor="chu_de_giao_dien">
-          <select
+        <div className="space-y-2">
+          <Label htmlFor="chu_de_giao_dien">Giao diện</Label>
+          <NativeSelect
             id="chu_de_giao_dien"
             name="chu_de_giao_dien"
             defaultValue={hoSo.chu_de_giao_dien ?? "system"}
-            className={inputCls}
           >
             <option value="light">Sáng</option>
             <option value="dark">Tối</option>
             <option value="system">Theo hệ thống</option>
-          </select>
-        </FieldRow>
+          </NativeSelect>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <FieldRow
-          label="Mục tiêu mỗi ngày"
-          htmlFor="phut_moi_ngay"
-          hint="Số phút bạn muốn học mỗi ngày (0–240)"
-        >
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="phut_moi_ngay">Mục tiêu mỗi ngày</Label>
+          <Input
             id="phut_moi_ngay"
             type="number"
             name="phut_moi_ngay"
@@ -98,60 +97,27 @@ export function ProfileForm({ hoSo }: Props) {
             min={0}
             max={240}
             step={5}
-            className={inputCls}
           />
-        </FieldRow>
+          <p className="text-xs text-lm-fg-muted">Số phút bạn muốn học mỗi ngày (0–240)</p>
+        </div>
 
-        <FieldRow label="Múi giờ" htmlFor="mui_gio" hint="Tên múi giờ IANA">
-          <input
+        <div className="space-y-2">
+          <Label htmlFor="mui_gio">Múi giờ</Label>
+          <Input
             id="mui_gio"
             type="text"
             name="mui_gio"
             defaultValue={hoSo.mui_gio ?? "Asia/Ho_Chi_Minh"}
             maxLength={64}
             placeholder="Asia/Ho_Chi_Minh"
-            className={inputCls}
           />
-        </FieldRow>
+          <p className="text-xs text-lm-fg-muted">Tên múi giờ IANA</p>
+        </div>
       </div>
 
       <div className="flex justify-end">
-        <button
-          type="submit"
-          className="h-10 rounded-md bg-amber-500 px-6 text-sm font-medium text-white transition hover:bg-amber-600"
-        >
-          Lưu thay đổi
-        </button>
+        <Button type="submit">Lưu thay đổi</Button>
       </div>
     </form>
-  );
-}
-
-// Tailwind classes dùng chung — gom 1 chỗ để đồng bộ.
-const inputCls =
-  "h-10 w-full rounded-md border border-slate-300 px-3 text-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200";
-
-function FieldRow({
-  label,
-  htmlFor,
-  hint,
-  required,
-  children,
-}: {
-  label: string;
-  htmlFor?: string;
-  hint?: string;
-  required?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <label htmlFor={htmlFor} className="block text-sm">
-      <span className="mb-1 block text-slate-700">
-        {label}
-        {required ? <span className="ml-0.5 text-red-500">*</span> : null}
-      </span>
-      {children}
-      {hint ? <span className="mt-1 block text-xs text-slate-500">{hint}</span> : null}
-    </label>
   );
 }
