@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   BookOpen,
@@ -14,17 +15,17 @@ import {
   Flame,
   type LucideIcon,
 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 type NavItem = {
   href: string;
   icon: LucideIcon;
   label: string;
-  badge?: string;
 };
 
 const NAV_ITEMS = [
   { href: "/dashboard", icon: LayoutDashboard, label: "Tổng quan" },
-  { href: "/vocab", icon: BookOpen, label: "Sổ từ", badge: "8" },
+  { href: "/vocab", icon: BookOpen, label: "Sổ từ" },
   { href: "/speak", icon: Mic, label: "Luyện nói" },
   { href: "/read", icon: BookText, label: "Đọc & học" },
   { href: "/write", icon: PenLine, label: "Luyện viết" },
@@ -43,8 +44,45 @@ const BOTTOM_NAV_ITEMS = [
  *
  * Client Component — dùng usePathname() để highlight active link.
  */
-export function Sidebar() {
+export function Sidebar({
+  initialVocabCount,
+  userId,
+}: {
+  initialVocabCount: number;
+  userId: string;
+}) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [vocabCount, setVocabCount] = useState(initialVocabCount);
+
+  useEffect(() => {
+    const supabase = createClient();
+    const channel = supabase
+      .channel(`vocab-sidebar:${userId}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tu_da_luu",
+          filter: `nguoi_dung_id=eq.${userId}`,
+        },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setVocabCount((count) => count + 1);
+          }
+          if (payload.eventType === "DELETE") {
+            setVocabCount((count) => Math.max(0, count - 1));
+          }
+          router.refresh();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(channel);
+    };
+  }, [router, userId]);
 
   function laActive(href: string) {
     if (href === "/dashboard") return pathname === "/dashboard";
@@ -84,9 +122,9 @@ export function Sidebar() {
               >
                 <Icon size={18} className="shrink-0" />
                 <span>{item.label}</span>
-                {item.badge ? (
+                {item.href === "/vocab" && vocabCount > 0 ? (
                   <span className="ml-auto rounded-full bg-lm-primary px-2 py-0.5 text-[10px] font-semibold text-lm-fg-on-primary">
-                    {item.badge}
+                    {vocabCount > 99 ? "99+" : vocabCount}
                   </span>
                 ) : null}
               </Link>

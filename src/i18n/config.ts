@@ -22,6 +22,12 @@ export const THEME_MAC_DINH: Theme = "system";
 /** Tên cookie — gom 1 chỗ để Server Action + i18n config dùng cùng key. */
 export const COOKIE_LOCALE = "lumio_locale";
 export const COOKIE_THEME = "lumio_theme";
+export const COOKIE_OPTS = {
+  maxAge: 60 * 60 * 24 * 365,
+  httpOnly: false,
+  sameSite: "lax" as const,
+  path: "/",
+};
 
 /** Nhãn hiển thị cho language switcher (UI fallback nếu thiếu translation). */
 export const NHAN_LOCALE: Record<Locale, string> = {

@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { DangNhapEmailSchema } from "@/lib/schemas/auth";
+import { getSiteUrl } from "@/lib/utils";
 
 /**
  * Bắt đầu OAuth flow với provider (Google hoặc Facebook).
@@ -13,13 +13,12 @@ import { DangNhapEmailSchema } from "@/lib/schemas/auth";
  */
 export async function dangNhapOAuthAction(provider: "google" | "facebook") {
   const supabase = await createClient();
-  const hdrs = await headers();
-  const origin = hdrs.get("origin") ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: `${siteUrl}/auth/callback`,
       // PKCE flow đã được @supabase/ssr xử lý, không cần code_challenge thủ công.
     },
   });

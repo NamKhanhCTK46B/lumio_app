@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useRef, useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
 import { createClient } from "@/lib/supabase/client";
 import { capNhatAvatarUrlAction } from "../actions";
 
@@ -104,7 +105,7 @@ export function AvatarUploader({ hientai_url, ten_hien_thi }: Props) {
       }}
       className="flex items-center gap-4"
     >
-      <div className="relative h-20 w-20 overflow-hidden rounded-full border border-slate-200 bg-slate-100">
+      <div className="relative h-20 w-20 overflow-hidden rounded-full border border-border bg-muted">
         {hienThi ? (
           // eslint-disable-next-line @next/next/no-img-element -- Storage URL bên ngoài, không cần next/image optimization
           <img
@@ -113,7 +114,7 @@ export function AvatarUploader({ hientai_url, ten_hien_thi }: Props) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-amber-100 text-2xl font-semibold text-amber-700">
+          <div className="flex h-full w-full items-center justify-center bg-lm-primary-soft text-2xl font-semibold text-lm-primary-ink">
             {chu_dau}
           </div>
         )}
@@ -126,19 +127,19 @@ export function AvatarUploader({ hientai_url, ten_hien_thi }: Props) {
           name="avatar"
           accept="image/png,image/jpeg,image/webp"
           onChange={khiChonFile}
-          className="text-sm text-slate-600 file:mr-3 file:h-9 file:rounded-md file:border-0 file:bg-amber-500 file:px-3 file:text-sm file:font-medium file:text-white file:transition hover:file:bg-amber-600"
+          className="text-sm text-muted-foreground file:mr-3 file:h-9 file:rounded-md file:border-0 file:bg-primary file:px-3 file:text-sm file:font-medium file:text-primary-foreground file:transition hover:file:bg-lm-primary-hover"
         />
-        <button
+        <Button
           type="submit"
           disabled={pending || !preview}
-          className="h-9 self-start rounded-md bg-slate-900 px-4 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
+          className="h-9 self-start px-4"
         >
           {pending ? "Đang tải..." : "Tải lên"}
-        </button>
-        <span className="text-xs text-slate-500">
+        </Button>
+        <span className="text-xs text-muted-foreground">
           PNG, JPEG, WEBP. Tối đa 5 MB.
         </span>
-        {error ? <span className="text-xs text-red-600">{error}</span> : null}
+        {error ? <span className="text-xs text-lm-danger">{error}</span> : null}
       </div>
     </form>
   );

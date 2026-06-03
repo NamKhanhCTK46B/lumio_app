@@ -16,14 +16,16 @@ export type TtsOptions = {
   pitch?: number;
   /** Âm lượng 0–1, mặc định 1. */
   volume?: number;
+  /** Dùng giọng mặc định của trình duyệt thay vì tự chọn voice theo ngôn ngữ. */
+  useDefaultVoice?: boolean;
 };
 
-const MAC_DINH: Required<TtsOptions> = {
+const MAC_DINH = {
   lang: "en-US",
   rate: 1,
   pitch: 1,
   volume: 1,
-};
+} satisfies Required<Pick<TtsOptions, "lang" | "rate" | "pitch" | "volume">>;
 
 /**
  * Kiểm tra trình duyệt có hỗ trợ TTS không.
@@ -95,7 +97,6 @@ export function taoTtsController() {
           return;
         }
 
-        // Cancel any ongoing speech
         synth.cancel();
 
         const merged = { ...MAC_DINH, ...opts };
@@ -105,9 +106,10 @@ export function taoTtsController() {
         utterance.pitch = merged.pitch;
         utterance.volume = merged.volume;
 
-        // Tìm voice phù hợp
-        const voice = timVoiceLang(merged.lang.split("-")[0]);
-        if (voice) utterance.voice = voice;
+        if (!merged.useDefaultVoice) {
+          const voice = timVoiceLang(merged.lang.split("-")[0]);
+          if (voice) utterance.voice = voice;
+        }
 
         utterance.onend = () => resolve();
         utterance.onerror = (e) => reject(new Error(`TTS error: ${e.error}`));

@@ -52,3 +52,32 @@ next-env.d.ts
 /supabase/.branches/
 /supabase/.temp/
 /supabase/logs/
+
+# Claude Code
+/.claude/worktrees/
+/.claude/plans/
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Turbo
+/.turbo/
+
+# Cache
+/.cache/
+/.swc/
+
+# IDE
+/.vscode/
+/.idea/
+*.swp
+*.swo
+
+# OS
+Thumbs.db
+
+# Large files for submission
+/docs/report/*.webm
+/docs/report/*.mp4

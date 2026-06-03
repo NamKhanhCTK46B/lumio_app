@@ -1,10 +1,12 @@
 "use server";
 
+import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { CapNhatHoSoSchema } from "@/lib/schemas/ho_so";
 import { hoSoRepo } from "@/lib/repositories/ho_so.repo";
+import { COOKIE_LOCALE, COOKIE_OPTS, COOKIE_THEME } from "@/i18n/config";
 
 /**
  * Cập nhật các trường hồ sơ. Tách riêng với upload avatar (action khác)
@@ -36,6 +38,11 @@ export async function capNhatHoSoAction(formData: FormData): Promise<void> {
 
   await hoSoRepo.capNhat(supabase, user.id, parsed.data);
 
+  const cookieStore = await cookies();
+  cookieStore.set(COOKIE_LOCALE, parsed.data.ngon_ngu_giao_dien, COOKIE_OPTS);
+  cookieStore.set(COOKIE_THEME, parsed.data.chu_de_giao_dien, COOKIE_OPTS);
+
+  revalidatePath("/", "layout");
   revalidatePath("/settings/profile");
   redirect("/settings/profile?ok=" + encodeURIComponent("Đã lưu thay đổi."));
 }

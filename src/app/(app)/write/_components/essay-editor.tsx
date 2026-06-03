@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { autoSaveAction, nopBaiAction } from "../actions";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * UC13 — Editor essay client-side với:
@@ -80,26 +82,26 @@ export function EssayEditor({
     <div className="space-y-5">
       <header className="space-y-2">
         <div className="flex items-center gap-2 text-xs">
-          <span className="rounded bg-amber-50 px-2 py-0.5 text-amber-700">{loai_de}</span>
-          <span className="text-slate-500">·</span>
-          <span className="text-slate-500">
+          <span className="rounded bg-lm-primary-soft px-2 py-0.5 text-lm-primary-ink">{loai_de}</span>
+          <span className="text-lm-fg-muted">·</span>
+          <span className="text-lm-fg-muted">
             {phut}:{String(giay).padStart(2, "0")}
           </span>
-          <span className="text-slate-500">·</span>
-          <span className="text-slate-500">{soTu} từ</span>
+          <span className="text-lm-fg-muted">·</span>
+          <span className="text-lm-fg-muted">{soTu} từ</span>
           <span className="ml-auto text-xs">
-            {trang_thai_luu === "luu" && <span className="text-slate-500">Đang lưu...</span>}
-            {trang_thai_luu === "loi" && <span className="text-red-600">Lưu lỗi</span>}
+            {trang_thai_luu === "luu" && <span className="text-lm-fg-muted">Đang lưu...</span>}
+            {trang_thai_luu === "loi" && <span className="text-lm-danger">Lưu lỗi</span>}
             {trang_thai_luu === "idle" && noi_dung !== noi_dung_ban_dau && (
-              <span className="text-emerald-600">Đã lưu nháp</span>
+              <span className="text-lm-success">Đã lưu nháp</span>
             )}
           </span>
         </div>
-        <h1 className="text-lg font-medium text-slate-900">{de_bai}</h1>
+        <h1 className="text-lg font-medium text-lm-fg">{de_bai}</h1>
       </header>
 
       {error && (
-        <div className="rounded-md border border-red-300 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <div className="rounded-md border border-lm-danger/30 bg-lm-danger-soft px-4 py-2 text-sm text-lm-danger-ink">
           {error}
         </div>
       )}
@@ -115,28 +117,27 @@ export function EssayEditor({
         }}
         className="space-y-3"
       >
-        <textarea
+        <Textarea
           name="noi_dung"
           value={noi_dung}
           onChange={(e) => setNoiDung(e.target.value)}
           rows={20}
           placeholder="Bắt đầu viết essay ở đây..."
-          className="w-full rounded-md border border-slate-300 bg-white px-4 py-3 font-mono text-sm leading-relaxed"
+          className="min-h-140 font-mono text-sm leading-relaxed dark:bg-lm-bg-elev-1"
         />
         <div className="flex items-center justify-between">
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-lm-fg-muted">
             Nội dung tự động lưu mỗi 10 giây. Bấm <strong>Nộp bài</strong> để AI chấm.
           </p>
-          <button
+          <Button
             type="submit"
             disabled={pending || soTu < 20}
-            className="rounded-md bg-amber-500 px-6 py-2 text-sm font-medium text-white transition hover:bg-amber-600 disabled:cursor-not-allowed disabled:bg-slate-300"
           >
             {pending ? "Đang chấm..." : "Nộp bài"}
-          </button>
+          </Button>
         </div>
         {soTu < 20 && (
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-lm-fg-muted">
             Cần ít nhất 20 từ để chấm. Còn {20 - soTu} từ nữa.
           </p>
         )}

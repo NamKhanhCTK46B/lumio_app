@@ -4,6 +4,7 @@ import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { gradeReviewAction } from "../../../vocab/actions";
 import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/app/action-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
@@ -17,6 +18,7 @@ export function ReviewSessionClient({ words }: { words: ReviewWordRow[] }) {
   const [state, setState] = useState<ReviewState>("question");
   const [correctCount, setCorrectCount] = useState(0);
   const [gradedCount, setGradedCount] = useState(0);
+  const [grading, setGrading] = useState(false);
   const router = useRouter();
 
   const word = words[index];
@@ -28,8 +30,10 @@ export function ReviewSessionClient({ words }: { words: ReviewWordRow[] }) {
 
   const onGrade = useCallback(
     async (quality: 0 | 1 | 2 | 3) => {
-      if (!word) return;
+      if (!word || grading) return;
+      setGrading(true);
       const result = await gradeReviewAction({ tu_id: word.id, quality });
+      setGrading(false);
       if (!result.ok) return;
 
       setGradedCount((n) => n + 1);
@@ -42,7 +46,7 @@ export function ReviewSessionClient({ words }: { words: ReviewWordRow[] }) {
         setState("question");
       }
     },
-    [word?.id, index, words.length],
+    [word?.id, index, words.length, grading],
   );
 
   if (state === "done") {
@@ -153,24 +157,28 @@ export function ReviewSessionClient({ words }: { words: ReviewWordRow[] }) {
               sublabel="0 ngày"
               variant="destructive"
               onClick={() => onGrade(0)}
+              isPending={grading}
             />
             <GradeButton
               label="Khó"
               sublabel="1 ngày"
               variant="secondary"
               onClick={() => onGrade(1)}
+              isPending={grading}
             />
             <GradeButton
               label="Tốt"
               sublabel="~3 ngày"
               variant="outline"
               onClick={() => onGrade(2)}
+              isPending={grading}
             />
             <GradeButton
               label="Dễ"
               sublabel="~7 ngày"
               variant="default"
               onClick={() => onGrade(3)}
+              isPending={grading}
             />
           </div>
         </div>
@@ -184,20 +192,23 @@ function GradeButton({
   sublabel,
   variant,
   onClick,
+  isPending,
 }: {
   label: string;
   sublabel: string;
   variant: "default" | "secondary" | "outline" | "destructive" | "ghost";
   onClick: () => void;
+  isPending?: boolean;
 }) {
   return (
-    <Button
+    <ActionButton
       variant={variant}
       onClick={onClick}
+      isPending={isPending}
       className="h-auto flex-col py-3 gap-0.5"
     >
       <span className="text-sm font-medium">{label}</span>
       <span className="text-xs opacity-70">{sublabel}</span>
-    </Button>
+    </ActionButton>
   );
 }

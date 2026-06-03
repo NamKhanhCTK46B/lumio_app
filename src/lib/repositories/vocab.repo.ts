@@ -161,13 +161,31 @@ export const vocabRepo = {
    * Liệt kê bộ từ của user (bao gồm bộ hệ thống để browse).
    */
   async danhSachBoTu(supabase: SupabaseClient): Promise<BoTuRow[]> {
-    const { data, error } = await supabase
-      .from("bo_tu")
-      .select("*")
-      .order("tao_luc", { ascending: false });
+    const [{ data: boTuList, error: errBoTu }, { data: tuList, error: errTu }] =
+      await Promise.all([
+        supabase
+          .from("bo_tu")
+          .select("*")
+          .order("tao_luc", { ascending: false }),
+        supabase
+          .from("tu_da_luu")
+          .select("bo_tu_id")
+          .not("bo_tu_id", "is", null),
+      ]);
 
-    if (error) throw error;
-    return data as BoTuRow[];
+    if (errBoTu) throw errBoTu;
+    if (errTu) throw errTu;
+
+    const soTuTheoBo = new Map<string, number>();
+    for (const tu of tuList ?? []) {
+      if (!tu.bo_tu_id) continue;
+      soTuTheoBo.set(tu.bo_tu_id, (soTuTheoBo.get(tu.bo_tu_id) ?? 0) + 1);
+    }
+
+    return (boTuList as BoTuRow[]).map((boTu) => ({
+      ...boTu,
+      so_tu: soTuTheoBo.get(boTu.id) ?? 0,
+    }));
   },
 
   /**
@@ -375,6 +393,19 @@ export const vocabRepo = {
     const { error } = await supabase.from("tu_da_luu").delete().eq("id", tuId);
     if (error) throw error;
     await capNhatSoTuBoTu(supabase, [tu?.bo_tu_id]);
+  },
+
+  /**
+   * Đếm số từ trong một bộ từ.
+   */
+  async demTuTrongBo(supabase: SupabaseClient, boTuId: string): Promise<number> {
+    const { count, error } = await supabase
+      .from("tu_da_luu")
+      .select("id", { count: "exact", head: true })
+      .eq("bo_tu_id", boTuId);
+
+    if (error) throw error;
+    return count ?? 0;
   },
 
   /**

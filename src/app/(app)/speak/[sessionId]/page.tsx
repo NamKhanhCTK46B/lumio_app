@@ -31,6 +31,8 @@ export default async function SpeakingSessionPage({
         nhanVatId={nhanVat.id}
         nhanVatTen={nhanVat.ten}
         nhanVatAvatar={nhanVat.url_avatar ?? null}
+        nhanVatSlug={nhanVat.slug}
+        nhanVatGiong={nhanVat.giong}
         phienId={sessionId}
         initialScenario={phien.boi_canh ?? ""}
         initialTurns={lichSu.map((turn) => ({

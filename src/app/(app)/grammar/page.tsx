@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { LoaderIcon } from "lucide-react";
 import { kiemTraGrammarAction, type GrammarResult } from "./actions";
@@ -50,8 +51,8 @@ export default function GrammarPage() {
           <CardTitle className="text-base">Kiểm tra ngữ pháp</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <textarea
-            className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring min-h-24 resize-y"
+          <Textarea
+            className="min-h-24 resize-y"
             placeholder="Nhập câu tiếng Anh cần kiểm tra..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}

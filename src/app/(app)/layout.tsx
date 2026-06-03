@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hoSoRepo } from "@/lib/repositories/ho_so.repo";
+import { vocabRepo } from "@/lib/repositories/vocab.repo";
 import {
   COOKIE_LOCALE,
   COOKIE_THEME,
@@ -33,6 +34,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   }
 
   let hoSo = null;
+  const thongKe = await vocabRepo.thongKe(supabase);
   try {
     hoSo = await hoSoRepo.layHoSoHienTai(supabase);
   } catch (error) {
@@ -50,7 +52,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex min-h-screen bg-lm-bg text-lm-fg">
-      <Sidebar />
+      <Sidebar initialVocabCount={thongKe.tong} userId={user.id} />
       <div className="flex min-h-screen flex-1 flex-col">
         <Header
           email={user.email ?? ""}

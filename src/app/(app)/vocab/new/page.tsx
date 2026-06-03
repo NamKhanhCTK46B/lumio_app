@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { taoBoTuAction } from "../actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeftIcon } from "lucide-react";
 
@@ -28,41 +30,38 @@ export default function NewVocabDeckPage() {
           <form action={taoBoTuFormAction} className="space-y-4">
             <label className="block space-y-1 text-sm">
               <span className="font-medium">Tên bộ từ</span>
-              <input
+              <Input
                 name="ten"
                 required
                 maxLength={64}
                 placeholder="VD: IELTS Band 7 Vocabulary"
-                className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
             <label className="block space-y-1 text-sm">
               <span className="font-medium">Mô tả</span>
-              <textarea
+              <Textarea
                 name="mo_ta"
                 maxLength={256}
                 rows={3}
                 placeholder="Mô tả ngắn về bộ từ này..."
-                className="w-full resize-y rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
               />
             </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="block space-y-1 text-sm">
                 <span className="font-medium">Chủ đề</span>
-                <input
+                <Input
                   name="chu_de"
                   maxLength={64}
                   placeholder="VD: Travel"
-                  className="w-full rounded-lg border border-input bg-background px-3 py-2 outline-none focus:ring-2 focus:ring-ring"
                 />
               </label>
               <label className="block space-y-1 text-sm">
                 <span className="font-medium">Màu bìa</span>
-                <input
+                <Input
                   name="mau_bia"
                   type="color"
                   defaultValue="#E8A33D"
-                  className="h-10 w-full rounded-lg border border-input bg-background px-2"
+                  className="px-2"
                 />
               </label>
             </div>
