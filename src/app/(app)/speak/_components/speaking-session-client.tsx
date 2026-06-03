@@ -20,7 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowLeftIcon, MicIcon, MicOffIcon, SendIcon, Volume2Icon, XIcon } from "lucide-react";
+import { ArrowLeftIcon, MicIcon, MicOffIcon, SendIcon, Volume2Icon, XIcon, Loader2 } from "lucide-react";
 
 type Turn = {
   vai: "nguoi_dung" | "ai";
@@ -496,7 +496,11 @@ export function SpeakingSessionClient({
                 disabled={!inputText.trim() || isLoading}
                 aria-label="Gửi"
               >
-                <SendIcon className="h-4 w-4" />
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <SendIcon className="h-4 w-4" />
+                )}
               </Button>
             </div>
           </div>
