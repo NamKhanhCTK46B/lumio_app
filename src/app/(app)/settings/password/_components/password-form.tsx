@@ -1,7 +1,9 @@
+'use client'
+
 import { doiMatKhauAction } from "../actions";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { ActionButton } from "@/components/app/action-button";
 
 export function PasswordForm() {
   return (
@@ -47,7 +49,9 @@ export function PasswordForm() {
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit">Đổi mật khẩu</Button>
+        <ActionButton type="submit" loadingText="Đang đổi mật khẩu...">
+          Đổi mật khẩu
+        </ActionButton>
       </div>
     </form>
   );

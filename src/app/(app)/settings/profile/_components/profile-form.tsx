@@ -1,8 +1,10 @@
+'use client'
+
 import { capNhatHoSoAction } from "../actions";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
+import { ActionButton } from "@/components/app/action-button";
 
 type Props = {
   hoSo: {
@@ -116,7 +118,9 @@ export function ProfileForm({ hoSo }: Props) {
       </div>
 
       <div className="flex justify-end">
-        <Button type="submit">Lưu thay đổi</Button>
+        <ActionButton type="submit" loadingText="Đang lưu...">
+          Lưu thay đổi
+        </ActionButton>
       </div>
     </form>
   );
