@@ -1,7 +1,9 @@
+'use client'
+
 import { quenMatKhauAction } from "../actions";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SubmitButton } from "../../_components/submit-button";
 
 export function ForgotForm() {
   return (
@@ -18,9 +20,9 @@ export function ForgotForm() {
         />
       </div>
 
-      <Button type="submit" size="lg" className="h-11">
+      <SubmitButton loadingText="Đang gửi email..." className="h-11">
         Gửi liên kết đặt lại
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

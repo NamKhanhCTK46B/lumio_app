@@ -1,7 +1,9 @@
+'use client'
+
 import { dangNhapEmailAction } from "../actions";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SubmitButton } from "../../_components/submit-button";
 
 export function EmailPasswordForm() {
   return (
@@ -30,9 +32,9 @@ export function EmailPasswordForm() {
         />
       </div>
 
-      <Button type="submit" size="lg" className="mt-1 h-11">
+      <SubmitButton loadingText="Đang đăng nhập..." className="mt-1 h-11">
         Đăng nhập
-      </Button>
+      </SubmitButton>
     </form>
   );
 }

@@ -1,7 +1,9 @@
+'use client'
+
 import { dangKyAction } from "../actions";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { SubmitButton } from "../../_components/submit-button";
 
 export function SignupForm() {
   return (
@@ -43,7 +45,7 @@ export function SignupForm() {
           autoComplete="new-password"
           placeholder="Tối thiểu 8 ký tự, gồm chữ và số"
         />
-        <p className="text-xs text-lm-fg-muted">
+        <p className="text-xs text-slate-600 dark:text-slate-400">
           Yêu cầu: tối thiểu 8 ký tự, có chữ cái và số.
         </p>
       </div>
@@ -62,9 +64,9 @@ export function SignupForm() {
         />
       </div>
 
-      <Button type="submit" size="lg" className="mt-1 h-11">
+      <SubmitButton loadingText="Đang tạo tài khoản..." className="mt-1 h-11">
         Tạo tài khoản
-      </Button>
+      </SubmitButton>
     </form>
   );
 }
