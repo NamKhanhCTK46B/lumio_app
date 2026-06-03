@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { QuenMatKhauSchema } from "@/lib/schemas/auth";
+import { getSiteUrl } from "@/lib/utils";
 
 /**
  * Gửi email reset password.
@@ -24,13 +24,12 @@ export async function quenMatKhauAction(formData: FormData): Promise<void> {
   }
 
   const supabase = await createClient();
-  const hdrs = await headers();
-  const origin = hdrs.get("origin") ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
 
   // Không await error: dù email không tồn tại, ta vẫn redirect "đã gửi"
   // để không leak thông tin email nào có trong DB.
   await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${origin}/auth/callback?next=/reset-password`,
+    redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
   });
 
   redirect("/forgot-password/da-gui");

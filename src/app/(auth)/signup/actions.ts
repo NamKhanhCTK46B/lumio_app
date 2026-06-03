@@ -1,9 +1,9 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { DangKySchema } from "@/lib/schemas/auth";
+import { getSiteUrl } from "@/lib/utils";
 
 /**
  * Đăng ký tài khoản mới qua Supabase Auth.
@@ -34,15 +34,14 @@ export async function dangKyAction(formData: FormData): Promise<void> {
   }
 
   const supabase = await createClient();
-  const hdrs = await headers();
-  const origin = hdrs.get("origin") ?? "http://localhost:3000";
+  const siteUrl = getSiteUrl();
 
   const { error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
       // Sau khi click link verify, redirect về callback rồi tới /onboarding.
-      emailRedirectTo: `${origin}/auth/callback?next=/onboarding`,
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/onboarding`,
       data: { full_name: parsed.data.ten_hien_thi },
     },
   });
