@@ -1,14 +1,16 @@
 import Image from "next/image";
+import { ParticlesBackground } from "./particles-background";
+import { AuthIllustration } from "./auth-illustration";
 
 /**
  * Layout chung cho tất cả auth pages (login, signup, forgot-password, reset-password).
  *
  * Bao gồm:
- * - Radial glow decoration (amber subtle)
+ * - Warm pastel color scheme (peach, cream, lavender)
+ * - Particles background (dots pattern + floating circles)
+ * - Education-themed illustration
  * - Logo wordmark ở đầu card
  * - Error/info alerts
- * - Card với border neutral và shadow (improved contrast)
- * - Background màu neutral từ design system (improved accessibility)
  */
 
 type AuthLayoutProps = {
@@ -21,16 +23,21 @@ type AuthLayoutProps = {
 
 export function AuthLayout({ title, description, children, error, info }: AuthLayoutProps) {
   return (
-    <main className="relative flex min-h-screen items-center justify-center bg-slate-50 dark:bg-slate-950 px-4 py-10">
-      {/* Radial glow decoration */}
+    <main className="relative flex min-h-screen items-center justify-center bg-[#FFF8F0] dark:bg-[#1A1410] px-4 py-10">
+      {/* Particles background decoration */}
+      <ParticlesBackground />
+
+      {/* Radial glow decoration - warm peach */}
       <div
         className="absolute inset-0 -z-10"
         style={{
-          background: 'radial-gradient(ellipse at 50% 0%, rgba(232,163,61,.12), transparent 60%)'
+          background: 'radial-gradient(ellipse at 50% 0%, rgba(255,155,113,.15), transparent 60%)'
         }}
       />
 
-      <div className="w-full max-w-md space-y-8 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 sm:p-10 shadow-md">
+      <div className="relative w-full max-w-md space-y-8 rounded-2xl border border-[#FFE5D0] dark:border-[#4A3B2F] bg-white dark:bg-[#2D2520] p-8 sm:p-10 shadow-md">
+        {/* Education illustration */}
+        <AuthIllustration />
         {/* Logo */}
         <div className="flex justify-center">
           <Image
@@ -45,10 +52,10 @@ export function AuthLayout({ title, description, children, error, info }: AuthLa
 
         {/* Header */}
         <header className="space-y-2 text-center">
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-50">
+          <h1 className="text-2xl font-semibold text-[#3D2817] dark:text-[#F5E6D3]">
             {title}
           </h1>
-          <p className="text-sm text-slate-700 dark:text-slate-300">
+          <p className="text-sm text-[#6B4E3D] dark:text-[#D4BBA0]">
             {description}
           </p>
         </header>
