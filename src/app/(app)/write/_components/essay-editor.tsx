@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useTransition } from "react";
 import { autoSaveAction, nopBaiAction } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
 /**
  * UC13 — Editor essay client-side với:
@@ -133,7 +134,14 @@ export function EssayEditor({
             type="submit"
             disabled={pending || soTu < 20}
           >
-            {pending ? "Đang chấm..." : "Nộp bài"}
+            {pending ? (
+              <>
+                <Loader2 className="animate-spin" />
+                Đang chấm...
+              </>
+            ) : (
+              "Nộp bài"
+            )}
           </Button>
         </div>
         {soTu < 20 && (

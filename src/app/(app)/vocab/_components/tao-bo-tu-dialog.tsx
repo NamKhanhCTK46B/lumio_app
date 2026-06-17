@@ -19,7 +19,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { PlusIcon } from "lucide-react";
+import { PlusIcon, Loader2 } from "lucide-react";
 
 const formSchema = z.object({
   ten: z.string().min(1, "Tên bộ từ không được để trống").max(64),
@@ -129,7 +129,14 @@ export function TaoBoTuDialog() {
                 Huỷ
               </Button>
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Đang tạo..." : "Tạo bộ từ"}
+                {submitting ? (
+                  <>
+                    <Loader2 className="animate-spin" />
+                    Đang tạo...
+                  </>
+                ) : (
+                  "Tạo bộ từ"
+                )}
               </Button>
             </DialogFooter>
           </form>
