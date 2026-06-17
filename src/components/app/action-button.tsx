@@ -1,10 +1,11 @@
 'use client'
 
+import type { ComponentProps } from 'react'
 import { useFormStatus } from 'react-dom'
-import { Button, type ButtonProps } from '@/components/ui/button'
+import { Button } from '@/components/ui/button'
 import { Loader2 } from 'lucide-react'
 
-type ActionButtonProps = Omit<ButtonProps, 'disabled'> & {
+type ActionButtonProps = Omit<ComponentProps<typeof Button>, 'disabled'> & {
   loadingText?: string
   isPending?: boolean
   disabled?: boolean
