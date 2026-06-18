@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getMessages } from "next-intl/server";
+import Script from "next/script";
 import { Providers } from "./providers";
 import {
   COOKIE_LOCALE,
@@ -14,6 +15,24 @@ export const metadata: Metadata = {
   title: "Lumio",
   description: "Học tiếng Anh cá nhân hoá với AI",
 };
+
+const INIT_THEME_SCRIPT = `
+(function () {
+  try {
+    var cookieTheme = document.cookie
+      .split("; ")
+      .find(function (row) { return row.indexOf("${COOKIE_THEME}=") === 0; })
+      ?.split("=")[1];
+    var savedTheme = cookieTheme ? decodeURIComponent(cookieTheme) : "system";
+    var theme = savedTheme === "system"
+      ? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+      : savedTheme;
+    if (theme !== "light" && theme !== "dark") theme = "light";
+    document.documentElement.dataset.theme = theme;
+    document.documentElement.style.colorScheme = theme;
+  } catch (_) {}
+})();
+`;
 
 /**
  * Root layout đọc cookie locale + theme ngay SSR để tránh flash:
@@ -32,7 +51,7 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   // `data-theme` set trước hydration để CSS vars apply ngay. Nếu user
-  // chọn "system", để rỗng và next-themes tự gán từ prefers-color-scheme.
+  // chọn "system", script init sẽ gán theo prefers-color-scheme trước hydrate.
   const themeAttr = theme === "system" ? undefined : theme;
 
   return (
@@ -42,6 +61,11 @@ export default async function RootLayout({
       suppressHydrationWarning
       className="h-full antialiased"
     >
+      <Script
+        id="lumio-init-theme"
+        strategy="beforeInteractive"
+        dangerouslySetInnerHTML={{ __html: INIT_THEME_SCRIPT }}
+      />
       <body className="min-h-full flex flex-col">
         <Providers
           locale={locale}

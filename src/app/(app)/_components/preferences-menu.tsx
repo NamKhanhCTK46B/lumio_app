@@ -2,11 +2,11 @@
 
 import { useTransition } from "react";
 import { useEffect, useRef, useState } from "react";
-import { useTheme } from "next-themes";
 import { Languages, Monitor, Moon, Sun } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { doiNgonNguAction, doiThemeAction } from "../preferences-actions";
 import { LOCALES, NHAN_LOCALE, type Locale, type Theme } from "@/i18n/config";
+import { useTheme } from "@/lib/theme/provider";
 
 /**
  * UC17 — Dropdown menu cho phép user toggle theme (3 lựa chọn) + locale

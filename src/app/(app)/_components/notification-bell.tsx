@@ -12,9 +12,9 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 export function NotificationBell() {
   const [chuaDoc, setChuaDoc] = useState(0);
-  const supabase = createClient();
 
   useEffect(() => {
+    const supabase = createClient();
     const channel: RealtimeChannel = supabase
       .channel("thong_bao:me")
       .on(

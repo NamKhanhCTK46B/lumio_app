@@ -1,17 +1,17 @@
 "use client";
 
-import { ThemeProvider } from "next-themes";
 import { NextIntlClientProvider } from "next-intl";
 import type { ReactNode } from "react";
+import { ThemeProvider } from "@/lib/theme/provider";
 
 /**
- * Wrap providers Client phải đặt trong RootLayout (Server Component không
- * thể trực tiếp dùng next-themes vì cần useEffect set class trên <html>).
+ * Wrap providers Client phải đặt trong RootLayout để các component con dùng
+ * i18n và theme context mà không kéo logic browser vào Server Component.
  *
  * - NextIntlClientProvider: cấp messages + locale cho Client Components.
  *   Server Components dùng `getTranslations()` independent provider.
- * - ThemeProvider next-themes: quản lý attribute `data-theme` + class
- *   `.dark` trên <html>. `defaultTheme` đến từ cookie, đẩy xuống qua prop.
+ * - ThemeProvider nội bộ: quản lý `data-theme` sau hydration; script init
+ *   trong RootLayout đã set theme trước khi React hydrate.
  */
 type Props = {
   children: ReactNode;
@@ -23,15 +23,7 @@ type Props = {
 export function Providers({ children, locale, messages, initial_theme }: Props) {
   return (
     <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Ho_Chi_Minh">
-      <ThemeProvider
-        attribute="data-theme"
-        defaultTheme={initial_theme}
-        enableSystem
-        // Tránh layout flash trong khi script next-themes set theme;
-        // RootLayout đã render html với data-theme từ cookie SSR-side,
-        // nên disableTransitionOnChange chỉ cho transition khi user toggle.
-        disableTransitionOnChange
-      >
+      <ThemeProvider initialTheme={initial_theme}>
         {children}
       </ThemeProvider>
     </NextIntlClientProvider>
