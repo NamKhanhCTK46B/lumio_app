@@ -18,7 +18,7 @@ export async function dangNhapOAuthAction(provider: "google" | "facebook") {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider,
     options: {
-      redirectTo: `${siteUrl}/auth/callback`,
+      redirectTo: `${siteUrl}/auth/callback?next=/dashboard`,
       // PKCE flow đã được @supabase/ssr xử lý, không cần code_challenge thủ công.
     },
   });
