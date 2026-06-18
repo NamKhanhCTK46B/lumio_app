@@ -456,14 +456,24 @@ export const vocabRepo = {
   async layTuCanOn(
     supabase: SupabaseClient,
     limit = 20,
+    boTuId?: string,
   ): Promise<ReviewWordRow[]> {
-    const { data, error } = await supabase
+    let query = supabase
       .from("tu_da_luu")
       .select(
-        "*, lich_on_tap(id, tu_id, he_so_de, so_ngay_cach, so_lan_lap, on_tap_ke_luc, on_tap_cuoi_luc, chat_luong_cuoi)",
+        "*, lich_on_tap!inner(id, tu_id, he_so_de, so_ngay_cach, so_lan_lap, on_tap_ke_luc, on_tap_cuoi_luc, chat_luong_cuoi)",
       )
-      .eq("lich_on_tap.on_tap_ke_luc_lte", new Date().toISOString())
-      .order("lich_on_tap.on_tap_ke_luc", { ascending: true })
+      .lte("lich_on_tap.on_tap_ke_luc", new Date().toISOString());
+
+    if (boTuId) {
+      query = query.eq("bo_tu_id", boTuId);
+    }
+
+    const { data, error } = await query
+      .order("on_tap_ke_luc", {
+        ascending: true,
+        referencedTable: "lich_on_tap",
+      })
       .limit(limit);
 
     if (error) throw error;
@@ -599,11 +609,24 @@ export const vocabRepo = {
     }));
 
     if (tuInserts.length > 0) {
-      const { error: errTu } = await supabase
+      const { data: tuDaTao, error: errTu } = await supabase
         .from("tu_da_luu")
-        .insert(tuInserts);
+        .insert(tuInserts)
+        .select("id, nguoi_dung_id");
 
       if (errTu) throw errTu;
+
+      const lichOnInserts = (tuDaTao ?? []).map((tu) => ({
+        tu_id: tu.id,
+        nguoi_dung_id: tu.nguoi_dung_id,
+        on_tap_ke_luc: new Date().toISOString(),
+      }));
+
+      const { error: errLichOn } = await supabase
+        .from("lich_on_tap")
+        .insert(lichOnInserts);
+
+      if (errLichOn) throw errLichOn;
     }
 
     return { so_tu: tuInserts.length };

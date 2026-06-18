@@ -18,14 +18,13 @@ export default async function VocabReviewPage({
   const { deckId } = await params;
   const supabase = await createClient();
 
-  // Lấy từ cần ôn
-  let tuCanOn = await vocabRepo.layTuCanOn(supabase, 20);
+  let deckName: string | null = null;
+  const tuCanOn = await vocabRepo.layTuCanOn(supabase, 20, deckId);
 
-  // Nếu có deckId → lọc theo deck
   if (deckId) {
     const deck = await vocabRepo.layBoTu(supabase, deckId);
     if (!deck) notFound();
-    tuCanOn = tuCanOn.filter((t) => t.bo_tu_id === deckId);
+    deckName = deck.ten;
   }
 
   const tongSo = tuCanOn.length;
@@ -51,7 +50,7 @@ export default async function VocabReviewPage({
           <h1 className="lm-h3">Ôn từ vựng</h1>
           <p className="text-sm text-muted-foreground">
             {tongSo > 0
-              ? `${tongSo} từ cần ôn hôm nay`
+              ? `${tongSo} từ cần ôn${deckName ? ` trong ${deckName}` : " hôm nay"}`
               : "Không có từ nào cần ôn hôm nay!"}
           </p>
         </div>
@@ -71,7 +70,7 @@ export default async function VocabReviewPage({
           </Link>
         </div>
       ) : (
-        <ReviewSessionClient words={tuCanOn} />
+        <ReviewSessionClient words={tuCanOn} backHref={`/vocab/${deckId}`} />
       )}
     </div>
   );
