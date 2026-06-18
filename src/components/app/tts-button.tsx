@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { laCoHoTroTts, taoTtsController } from "@/lib/speech/tts";
 import { Button } from "@/components/ui/button";
 import { Volume2Icon } from "lucide-react";
@@ -16,11 +16,14 @@ type TtsButtonProps = {
  */
 export function TtsButton({ text, lang = "en-US", size = "icon" }: TtsButtonProps) {
   const [playing, setPlaying] = useState(false);
-
-  if (!laCoHoTroTts()) return null;
+  const supported = useSyncExternalStore(
+    () => () => {},
+    laCoHoTroTts,
+    () => true,
+  );
 
   async function play() {
-    if (playing) return;
+    if (playing || !supported) return;
     setPlaying(true);
     try {
       const tts = taoTtsController();
@@ -38,7 +41,7 @@ export function TtsButton({ text, lang = "en-US", size = "icon" }: TtsButtonProp
         variant="ghost"
         size="sm"
         onClick={play}
-        disabled={playing}
+        disabled={playing || !supported}
         className="h-7 gap-1.5 px-2 text-xs"
       >
         <Volume2Icon className={`h-3.5 w-3.5 ${playing ? "animate-pulse" : ""}`} />
@@ -52,7 +55,7 @@ export function TtsButton({ text, lang = "en-US", size = "icon" }: TtsButtonProp
       variant="ghost"
       size="icon"
       onClick={play}
-      disabled={playing}
+      disabled={playing || !supported}
       aria-label="Phát âm"
       className="h-8 w-8"
     >

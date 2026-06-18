@@ -3,7 +3,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { contentRepo } from "@/lib/repositories/nguon_noi_dung.repo";
 import { Button } from "@/components/ui/button";
-import { ArrowLeftIcon, BookOpenIcon } from "lucide-react";
+import { ArrowLeftIcon } from "lucide-react";
 import { ReaderClient } from "./_components/reader-client";
 
 /**
